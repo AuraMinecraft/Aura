@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static net.aniby.aura.tools.AuraUtils.onlyDigits;
+import static net.aniby.aura.tool.AuraUtils.onlyDigits;
 
 public class BackendTools {
     @SneakyThrows

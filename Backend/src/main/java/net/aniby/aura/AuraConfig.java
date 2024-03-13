@@ -2,7 +2,7 @@ package net.aniby.aura;
 
 import com.google.common.reflect.TypeToken;
 import lombok.Getter;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;

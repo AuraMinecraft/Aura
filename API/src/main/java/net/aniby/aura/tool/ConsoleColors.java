@@ -1,4 +1,4 @@
-package net.aniby.aura.tools;
+package net.aniby.aura.tool;
 
 public class ConsoleColors {
     // Reset

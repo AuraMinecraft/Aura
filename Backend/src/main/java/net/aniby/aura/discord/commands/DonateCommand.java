@@ -1,12 +1,10 @@
 package net.aniby.aura.discord.commands;
 
-import net.aniby.aura.AuraAPI;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.modules.CAuraUser;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -32,10 +30,13 @@ public class DonateCommand implements ACommand {
         AuraConfig config = AuraBackend.getConfig();
 
         String discordId = user.getId();
-        AuraUser CAuraUser = AuraUser.getByWith("discord_id", discordId);
-        List<Replacer> replacerList = CAuraUser != null ? CAuraUser.getReplacers() : List.of(
-                Replacer.r("discord_id", discordId)
-        );
+        AuraUser auraUser = AuraUser.getByWith("discord_id", discordId);
+        if (auraUser == null || auraUser.getRefreshToken() == null) {
+            event.getHook().editOriginal(config.getMessage("need_linked_twitch")).queue();
+            return;
+        }
+
+        List<Replacer> replacerList = auraUser.getReplacers();
 
         OptionMapping promoMapping = event.getOption("promo_user");
         if (promoMapping != null) {
@@ -60,20 +61,15 @@ public class DonateCommand implements ACommand {
                     return;
                 }
 
-                if (CAuraUser != null && CAuraUser.getPromoDiscordId() != null) {
+                if (auraUser.getPromoDiscordId() != null) {
                     event.getHook().editOriginal(
                             config.getMessage("already_used_promo", replacerList)
                     ).queue();
                     return;
                 }
 
-                if (CAuraUser == null) {
-                    CAuraUser = AuraUser.upsertWithDiscordId(discordId);
-                    replacerList = CAuraUser.getReplacers();
-                }
-
-                CAuraUser.setPromoDiscordId(inviter.getDiscordId());
-                CAuraUser.save();
+                auraUser.setPromoDiscordId(inviter.getDiscordId());
+                auraUser.save();
             }
         }
 

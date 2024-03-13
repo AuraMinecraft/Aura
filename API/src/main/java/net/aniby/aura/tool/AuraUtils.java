@@ -1,4 +1,4 @@
-package net.aniby.aura.tools;
+package net.aniby.aura.tool;
 
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;

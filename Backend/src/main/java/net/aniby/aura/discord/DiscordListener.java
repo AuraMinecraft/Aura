@@ -1,9 +1,7 @@
 package net.aniby.aura.discord;
 
-import net.aniby.aura.AuraAPI;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.modules.CAuraUser;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;

@@ -2,12 +2,9 @@ package net.aniby.aura.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import net.aniby.aura.AuraAPI;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.modules.CAuraUser;
 import net.aniby.aura.twitch.TwitchBot;
-import net.aniby.aura.twitch.TwitchIRC;
 import net.aniby.aura.twitch.TwitchLinkState;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;

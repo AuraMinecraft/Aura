@@ -1,8 +1,8 @@
 package net.aniby.aura.modules;
 
 import com.github.twitch4j.domain.ChannelCache;
-import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.domain.User;
+import com.github.twitch4j.pubsub.PubSubSubscription;
 import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.*;
@@ -10,7 +10,8 @@ import net.aniby.aura.AuraAPI;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.discord.DiscordIRC;
 import net.aniby.aura.http.IOHelper;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.module.CAuraUser;
+import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -24,10 +25,9 @@ import org.json.simple.parser.ParseException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
-import java.sql.SQLException;
 import java.util.*;
 
-import static net.aniby.aura.tools.Replacer.r;
+import static net.aniby.aura.tool.Replacer.r;
 
 @Getter
 @Setter
@@ -35,20 +35,12 @@ import static net.aniby.aura.tools.Replacer.r;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AuraUser extends CAuraUser {
-    public static AuraUser cast(CAuraUser old) {
-        return new AuraUser(
-                old.getPlayerName(),
-                old.getTwitchId(),
-                old.getTwitchName(),
-                old.getRefreshToken(),
-                old.getDiscordId(),
-                old.getAccessToken(),
-                old.getExpiresAt(),
-                old.getAura(),
-                old.isWhitelisted(),
-                old.getPromoDiscordId()
-        );
-    }
+    // Constructor
+    private final List<PubSubSubscription> subscriptions = new ArrayList<>();
+
+    private String accessToken = null;
+
+    private long expiresAt = 0; // seconds
 
     @SneakyThrows
     public static AuraUser getByWith(Object... args) {
@@ -69,29 +61,17 @@ public class AuraUser extends CAuraUser {
         return null;
     }
 
-    public void init() throws SQLException {
-        if (this.checkForForce())
+    public void init() {
+        if (this.getTwitchId() != null) {
             AuraBackend.getTwitch().registerStreamer(this);
-        else if (this.getTwitchId() != null)
-            this.updateTwitchName();
+        }
     }
 
     // Constructors
-    public static AuraUser upsertWithDiscordId(String discordId) {
-        AuraUser user = getByWith("discord_id", discordId);
-        if (user == null) {
-            user = new AuraUser(
-                    null, discordId, null, null, null, null,
-                    0, 0, false, null
-            );
-            user.save();
-        }
-        return user;
-    }
     public static AuraUser upsertWithTwitch(String twitchName, String twitchId) {
         AuraUser user = getByWith("twitch_id", twitchId);
         if (user == null) {
-            user = new AuraUser(
+            user = new AuraUser(0,
                     null, null, twitchName, twitchId, null, null,
                     0, 0, false, null
             );
@@ -103,7 +83,7 @@ public class AuraUser extends CAuraUser {
         return user;
     }
 
-    public AuraUser(String playerName,
+    public AuraUser(int id, String playerName,
                       String discordId,
                       String twitchName,
                       String twitchId,
@@ -114,6 +94,7 @@ public class AuraUser extends CAuraUser {
                       boolean whitelisted,
                       String promoDiscordId) {
         super(playerName, discordId, twitchName, twitchId, accessToken, refreshToken, expiresAt, aura, whitelisted, promoDiscordId);
+        this.setId(id);
     }
     // Aura
     public double addAura(double aura, AuraUser streamer) {
@@ -141,69 +122,11 @@ public class AuraUser extends CAuraUser {
     }
 
     // Twitch Work
-    boolean checkForForce() throws SQLException {
-        if (this.getRefreshToken() != null) {
-            if (this.updateFields(true)) {
-                return true;
-            }
-
-            this.setRefreshToken(null);
-            this.save();
-            AuraBackend.getLogger().warning(
-                    String.format("Invalid refreshToken for (%s / %s)", getPlayerName(), getTwitchName())
-            );
-        }
-        return false;
-    }
-
-    boolean updateTwitchName() {
-        if (this.getTwitchId() != null && this.getTwitchName() != null) {
-            User user = getTwitchUser();
-            if (user != null) {
-                this.setTwitchName(user.getDisplayName());
-                return true;
-            }
-        }
-        return false;
-    }
-
-    boolean updateFields(boolean force) {
-        if (this.getRefreshToken() != null) {
-            if (new Date().getTime() >= this.getExpiresAt() || force) {
-                try {
-                    this.setAccessToken(null);
-                    if (!refresh())
-                        return false;
-                } catch (Exception ignored) {}
-            }
-
-            if (getTwitchName() == null) {
-                if (this.getTwitchId() != null || this.getAccessToken() != null) {
-                    TwitchHelix helix = AuraBackend.getTwitch().getClient().getHelix();
-                    List<User> list = this.getTwitchId() != null
-                            ? helix.getUsers(null, List.of(this.getTwitchId()), null).execute().getUsers()
-                            : helix.getUsers(this.getAccessToken(), null, null).execute().getUsers();
-
-                    if (list.size() == 1) {
-                        User user = list.get(0);
-                        this.setTwitchName(user.getDisplayName());
-                        this.setTwitchId(user.getId());
-                        return true;
-                    }
-                }
-                return false;
-            }
-        } else if (this.getTwitchId() != null) {
-            if (force || this.getTwitchName() == null) {
-                List<User> list = AuraBackend.getTwitch().getClient().getHelix()
-                        .getUsers(null, Collections.singletonList(this.getTwitchId()), null)
-                        .execute().getUsers();
-
-                if (list.size() == 1) {
-                    this.setTwitchName(list.get(0).getDisplayName());
-                    return true;
-                }
-            }
+    public boolean updateTwitchName() {
+        User user = getTwitchUser();
+        if (user != null) {
+            this.setTwitchName(user.getDisplayName());
+            return true;
         }
         return false;
     }
@@ -303,12 +226,12 @@ public class AuraUser extends CAuraUser {
             user = foundByDiscord;
             user.setRefreshToken(refreshToken);
         } else {
-            user = new AuraUser(
+            user = new AuraUser(0,
                     null, discordId, null, null, accessToken, refreshToken, expiresAt, 0,
                     false, null);
         }
         net.dv8tion.jda.api.entities.User discordUser = user.getDiscordUser();
-        if (discordUser == null || !user.updateFields(true))
+        if (discordUser == null || !user.refresh() || !user.updateTwitchName())
             return null;
 
         String twitchId = user.getTwitchId();

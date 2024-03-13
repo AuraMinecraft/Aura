@@ -5,7 +5,7 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.BackendTools;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import java.util.List;
 import java.util.Locale;
 
-import static net.aniby.aura.tools.Replacer.r;
+import static net.aniby.aura.tool.Replacer.r;
 
 public class UnlinkCommand implements ACommand {
     public boolean hasPermission(SlashCommandInteractionEvent event) {

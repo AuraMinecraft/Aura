@@ -1,4 +1,4 @@
-package net.aniby.aura.modules;
+package net.aniby.aura.module;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;
@@ -8,13 +8,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import net.aniby.aura.AuraAPI;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.tool.Replacer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.aniby.aura.tools.Replacer.r;
+import static net.aniby.aura.tool.Replacer.r;
 
 @Getter
 @AllArgsConstructor

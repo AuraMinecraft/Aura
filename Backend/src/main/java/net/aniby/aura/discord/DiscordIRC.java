@@ -1,10 +1,8 @@
 package net.aniby.aura.discord;
 
 import lombok.Getter;
-import net.aniby.aura.AuraAPI;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.tools.AuraUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;

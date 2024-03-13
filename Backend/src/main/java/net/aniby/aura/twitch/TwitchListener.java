@@ -14,8 +14,8 @@ import com.github.twitch4j.pubsub.events.RewardRedeemedEvent;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.tools.AuraUtils;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.tool.AuraUtils;
+import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -25,7 +25,7 @@ import java.io.BufferedInputStream;
 import java.util.List;
 import java.util.Objects;
 
-import static net.aniby.aura.tools.Replacer.r;
+import static net.aniby.aura.tool.Replacer.r;
 
 public class TwitchListener {
     double rewardCost;

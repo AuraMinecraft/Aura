@@ -1,4 +1,4 @@
-package net.aniby.aura.tools;
+package net.aniby.aura.tool;
 
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;

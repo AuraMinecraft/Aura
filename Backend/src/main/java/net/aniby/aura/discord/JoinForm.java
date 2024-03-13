@@ -1,12 +1,9 @@
 package net.aniby.aura.discord;
 
-import net.aniby.aura.AuraAPI;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.modules.CAuraUser;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.tools.AuraUtils;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -141,11 +138,12 @@ public class JoinForm {
             return;
         }
 
-        AuraUser CAuraUser = AuraUser.upsertWithDiscordId(user.getId());
-        CAuraUser.setPlayerName(nickname);
-        CAuraUser.save();
+        AuraUser auraUser = AuraUser.getByWith("discord_id", user.getId());
+        assert auraUser != null;
+        auraUser.setPlayerName(nickname);
+        auraUser.save();
 
-        tags.addAll(CAuraUser.getReplacers());
+        tags.addAll(auraUser.getReplacers());
         logStringEmbed = config.replaceMessage(logStringEmbed, tags);
 
 
@@ -156,7 +154,7 @@ public class JoinForm {
         } catch (Exception ignored) {}
 
         try {
-            Member member = CAuraUser.getGuildMember();
+            Member member = auraUser.getGuildMember();
             assert member != null;
             irc.getDefaultGuild().modifyNickname(member, nickname).queue();
         } catch (Exception ignored) {}

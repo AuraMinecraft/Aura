@@ -1,7 +1,7 @@
 package net.aniby.aura.twitch;
 
 import lombok.Getter;
-import net.aniby.aura.tools.AuraUtils;
+import net.aniby.aura.tool.AuraUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

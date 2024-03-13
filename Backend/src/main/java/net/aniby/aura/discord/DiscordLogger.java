@@ -2,11 +2,11 @@ package net.aniby.aura.discord;
 
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.modules.AuraDonate;
+import net.aniby.aura.module.AuraDonate;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.modules.CAuraUser;
-import net.aniby.aura.tools.AuraUtils;
-import net.aniby.aura.tools.Replacer;
+import net.aniby.aura.module.CAuraUser;
+import net.aniby.aura.tool.AuraUtils;
+import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 

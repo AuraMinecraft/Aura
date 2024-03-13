@@ -4,10 +4,10 @@ import lombok.Getter;
 import net.aniby.aura.AuraAPI;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.modules.AuraDonate;
+import net.aniby.aura.module.AuraDonate;
 import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.tools.AuraCache;
-import net.aniby.aura.tools.AuraUtils;
+import net.aniby.aura.tool.AuraCache;
+import net.aniby.aura.tool.AuraUtils;
 import net.aniby.yoomoney.client.YooMoneyClient;
 import net.aniby.yoomoney.modules.notifications.IncomingNotification;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -87,7 +87,7 @@ public class AuraDonation {
     }
 
     public static AuraDonate create(@NotNull String discordId, double amount, double realAmount, long timestamp) {
-        AuraUser user = AuraUser.upsertWithDiscordId(discordId);
+        AuraUser user = AuraUser.getByWith("discord_id", discordId);
 
         String promo = user.getPromoDiscordId();
         AuraUser streamer = promo != null ? AuraUser.getByWith("discord_id", promo) : null;

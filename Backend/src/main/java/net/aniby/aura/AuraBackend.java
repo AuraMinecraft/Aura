@@ -7,14 +7,17 @@ import net.aniby.aura.discord.JoinForm;
 import net.aniby.aura.discord.commands.*;
 import net.aniby.aura.donate.AuraDonation;
 import net.aniby.aura.http.AuraHTTPServer;
-import net.aniby.aura.tools.AuraUtils;
-import net.aniby.aura.tools.ConsoleColors;
+import net.aniby.aura.modules.AuraUser;
+import net.aniby.aura.module.CAuraUser;
+import net.aniby.aura.tool.AuraUtils;
+import net.aniby.aura.tool.ConsoleColors;
 import net.aniby.aura.twitch.TwitchBot;
 import ninja.leaping.configurate.ConfigurationNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
 public class AuraBackend {
@@ -66,6 +69,16 @@ public class AuraBackend {
             discord = new DiscordIRC();
             logger.info(ConsoleColors.GREEN + "JDA Module initialized!" + ConsoleColors.WHITE);
 
+            // Users init
+            for (CAuraUser u : AuraAPI.getDatabase().getUsers().queryBuilder()
+                    .where()
+                    .isNotNull("refresh_token")
+                    .query()) {
+                AuraUser user = AuraUser.cast(u);
+                user.init();
+            }
+            logger.info(ConsoleColors.GREEN + "Users initialized!" + ConsoleColors.WHITE);
+
             // Commands
             handler = new CommandHandler(discord.getJda());
             handler.registerCommands(
@@ -101,6 +114,8 @@ public class AuraBackend {
             Runtime.getRuntime().addShutdownHook(new Thread(AuraBackend::onShutdown));
         } catch (IOException e) {
             logger.info("Config can't be loaded! Disabling...");
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
