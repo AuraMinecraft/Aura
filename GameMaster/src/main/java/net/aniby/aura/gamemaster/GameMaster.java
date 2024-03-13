@@ -3,10 +3,16 @@ package net.aniby.aura.gamemaster;
 import co.aikar.commands.PaperCommandManager;
 import lombok.Getter;
 import net.aniby.aura.AuraAPI;
+import net.aniby.aura.gamemaster.commands.EventMessageCommand;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class GameMaster extends JavaPlugin {
@@ -33,6 +39,7 @@ public final class GameMaster extends JavaPlugin {
         );
 
         PaperCommandManager manager = new PaperCommandManager(this);
+        manager.registerCommand(new EventMessageCommand());
     }
 
     @Override
