@@ -2,7 +2,6 @@ package net.aniby.aura.gamemaster;
 
 import co.aikar.commands.PaperCommandManager;
 import lombok.Getter;
-import net.aniby.aura.AuraAPI;
 import net.aniby.aura.gamemaster.commands.EventMessageCommand;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;

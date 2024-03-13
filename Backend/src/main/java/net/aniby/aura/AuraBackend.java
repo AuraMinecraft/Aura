@@ -7,12 +7,13 @@ import net.aniby.aura.discord.JoinForm;
 import net.aniby.aura.discord.commands.*;
 import net.aniby.aura.donate.AuraDonation;
 import net.aniby.aura.http.AuraHTTPServer;
-import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.module.CAuraUser;
+import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.tool.AuraUtils;
 import net.aniby.aura.tool.ConsoleColors;
 import net.aniby.aura.twitch.TwitchBot;
 import ninja.leaping.configurate.ConfigurationNode;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,21 +21,16 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+@SpringBootApplication
 public class AuraBackend {
     // Velocity
     @Getter
     private static final Logger logger = Logger.getLogger("Aura");
     // Aura
     @Getter
-    private static TwitchBot twitch;
-    @Getter
-    private static AuraConfig config = null;
-    @Getter
     private static DiscordIRC discord;
     @Getter
     private static CommandHandler handler;
-    @Getter
-    private static AuraDonation donation;
 
     public static Path workingDirectory() {
         return new File("").toPath();
@@ -49,6 +45,8 @@ public class AuraBackend {
     }
 
     public static void main(String[] args) {
+        SpringApplication.run(AuraBackend.class, args);
+
         try {
             // All from config
             File configFile = new File("config.yml");
@@ -70,11 +68,11 @@ public class AuraBackend {
             logger.info(ConsoleColors.GREEN + "JDA Module initialized!" + ConsoleColors.WHITE);
 
             // Users init
-            for (CAuraUser u : AuraAPI.getDatabase().getUsers().queryBuilder()
+            for (AuraUser u : AuraAPI.getDatabase().getUsers().queryBuilder()
                     .where()
                     .isNotNull("refresh_token")
                     .query()) {
-                AuraUser user = AuraUser.cast(u);
+                net.aniby.aura.modules.AuraUser user = net.aniby.aura.modules.AuraUser.cast(u);
                 user.init();
             }
             logger.info(ConsoleColors.GREEN + "Users initialized!" + ConsoleColors.WHITE);

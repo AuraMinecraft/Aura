@@ -1,8 +1,8 @@
 package net.aniby.aura.discord;
 
 import net.aniby.aura.AuraBackend;
-import net.aniby.aura.modules.AuraUser;
 import net.aniby.aura.AuraConfig;
+import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,39 +24,41 @@ import java.util.List;
 import java.util.Set;
 
 public class JoinForm {
+    @Autowired
+    AuraConfig config;
+
     public static final String FORM_ACCEPT = "auralink:form:accept:";
 
     public static void buttonFormAccept(@NotNull ButtonInteractionEvent event) {
-        AuraConfig config = AuraBackend.getConfig();
         User source = event.getUser();
         String[] args = event.getComponentId().split(":");
         String discordId = args[3];
 
-        AuraUser CAuraUser = AuraUser.getByWith("discord_id", discordId);
-        if (CAuraUser == null || !CAuraUser.inGuild()) {
+        AuraUser auraUser = AuraUser.getByWith("discord_id", discordId);
+        if (auraUser == null || !auraUser.inGuild()) {
             event.editMessage(config.getMessage("not_in_guild"))
                     .setEmbeds(new ArrayList<>()).setComponents(new ArrayList<>()).queue();
             return;
         }
 
-        if (CAuraUser.getPlayerName() == null) {
+        if (auraUser.getPlayerName() == null) {
             event.editMessage(config.getMessage("player_name_not_found"))
                     .setEmbeds(new ArrayList<>()).setComponents(new ArrayList<>()).queue();
             return;
         }
 
-        CAuraUser.setWhitelisted(true);
-        CAuraUser.save();
+        auraUser.setWhitelisted(true);
+        auraUser.save();
 
-        List<Replacer> tags = CAuraUser.getReplacers();
+        List<Replacer> tags = auraUser.getReplacers();
         tags.add(Replacer.r("admin_mention", source.getAsMention()));
         // Logging
         AuraBackend.getLogger().info(
-                "\u001B[36m" + CAuraUser.getPlayerName() + "\u001B[37m was \u001B[32madded \u001B[37mto server by \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
+                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m was \u001B[32madded \u001B[37mto server by \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
         );
 
         // Add role
-        User target = CAuraUser.getDiscordUser();
+        User target = auraUser.getDiscordUser();
 
         DiscordIRC irc = AuraBackend.getDiscord();
         Role addRole = irc.getRoles().get("player");

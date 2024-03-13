@@ -1,4 +1,4 @@
-package net.aniby.aura.module;
+package net.aniby.aura.entity;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -13,11 +13,7 @@ import net.aniby.aura.tool.AuraUtils;
 @DatabaseTable(tableName = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-public class CAuraUser {
-
-
-    // === User Only ===
-    // Main
+public class AuraUser {
     @DatabaseField(generatedId = true)
     private int id = 0;
 

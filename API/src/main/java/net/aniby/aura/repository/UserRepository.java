@@ -1,21 +1,30 @@
 package net.aniby.aura.repository;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import net.aniby.aura.AuraAPI;
-import net.aniby.aura.module.CAuraUser;
+import lombok.experimental.FieldDefaults;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.mysql.AuraDatabase;
 
+@Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserRepository {
-    // Methods
+    AuraDatabase database;
+
     @SneakyThrows
-    public int delete(CAuraUser user) {
-        return AuraAPI.getDatabase().getUsers().delete(user);
+    public int delete(AuraUser user) {
+        return database.getUsers().delete(user);
     }
 
     @SneakyThrows
-    public void update(CAuraUser user) {
+    public void update(AuraUser user) {
         if (user.getId() > 0)
-            AuraAPI.getDatabase().getUsers().update(user);
+            database.getUsers().update(user);
         else
-            AuraAPI.getDatabase().getUsers().create(user);
+            database.getUsers().create(user);
     }
 }

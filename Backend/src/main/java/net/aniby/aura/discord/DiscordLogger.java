@@ -2,26 +2,33 @@ package net.aniby.aura.discord;
 
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.module.AuraDonate;
-import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.module.CAuraUser;
+import net.aniby.aura.entity.AuraDonate;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.repository.DonateRepository;
+import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.AuraUtils;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DiscordLogger {
+    @Autowired
+    AuraConfig config;
+    @Autowired
+    UserService userService;
+    @Autowired
+    DonateRepository donateRepository;
+
     TextChannel getChannel() {
         return AuraBackend.getDiscord().channels.get("logs");
     }
 
     public void viewerEarnedAura(String displayName, AuraUser user, double amount, String streamerName, double streamerAmount) {
-        AuraConfig config = AuraBackend.getConfig();
-
-        List<Replacer> replacerList = new ArrayList<>(user.getReplacers());
+        List<Replacer> replacerList = new ArrayList<>(userService.getReplacers(user));
         replacerList.add(Replacer.r("earned_aura", AuraUtils.roundDouble(amount)));
         replacerList.add(Replacer.r("streamer_name", streamerName));
         replacerList.add(Replacer.r("streamer_earned_aura", AuraUtils.roundDouble(streamerAmount)));
@@ -34,10 +41,8 @@ public class DiscordLogger {
         }
     }
 
-    public void auraReject(String displayName, AuraUser user, CAuraUser streamer, double userAmount, double streamerAmount) {
-        AuraConfig config = AuraBackend.getConfig();
-
-        List<Replacer> replacerList = new ArrayList<>(user.getReplacers());
+    public void auraReject(String displayName, AuraUser user, AuraUser streamer, double userAmount, double streamerAmount) {
+        List<Replacer> replacerList = new ArrayList<>(userService.getReplacers(user));
         replacerList.add(Replacer.r("rejected_aura", AuraUtils.roundDouble(userAmount)));
         replacerList.add(Replacer.r("rejected_streamer_aura", AuraUtils.roundDouble(streamerAmount)));
         replacerList.add(Replacer.r("streamer_name", streamer.getTwitchName()));
@@ -51,16 +56,14 @@ public class DiscordLogger {
     }
 
     public void donate(AuraDonate donate, double earnedAura, double earnedRubles) {
-        AuraConfig config = AuraBackend.getConfig();
-
-        AuraUser user = AuraUser.getByWith("discord_id", donate.getDiscordId());
-        List<Replacer> replacerList = new ArrayList<>(donate.getReplacers());
+        AuraUser user = donate.getUser();
+        List<Replacer> replacerList = new ArrayList<>(donateRepository.getReplacers(donate));
         AuraUser streamer = null;
         String ser = "-";
         if (user != null) {
-            replacerList.addAll(user.getReplacers());
+            replacerList.addAll(userService.getReplacers(user));
             if (user.getPromoDiscordId() != null) {
-                streamer = AuraUser.getByWith("discord_id", user.getPromoDiscordId());
+                streamer = userService.getByWith("discord_id", user.getPromoDiscordId());
                 assert streamer != null;
                 replacerList.add(Replacer.r("streamer_name", streamer.getTwitchName()));
                 if (earnedRubles > 0)
@@ -76,7 +79,7 @@ public class DiscordLogger {
             e.printStackTrace();
         }
         try {
-            User donated = user.getDiscordUser();
+            User donated = userService.getDiscordUser(user);
             if (donated != null)
                 donated.openPrivateChannel().flatMap(channel ->
                         channel.sendMessage(config.getMessage("donate_notify", replacerList))
@@ -85,7 +88,7 @@ public class DiscordLogger {
         }
         try {
             if (streamer != null) {
-                User referral = streamer.getDiscordUser();
+                User referral = userService.getDiscordUser(streamer);
                 if (referral != null)
                     referral.openPrivateChannel().flatMap(channel ->
                             channel.sendMessage(config.getMessage("donate_notify_referral", replacerList))

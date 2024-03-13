@@ -6,8 +6,8 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import lombok.Getter;
-import net.aniby.aura.module.CAuraUser;
-import net.aniby.aura.module.AuraDonate;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.entity.AuraDonate;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
@@ -15,15 +15,15 @@ import java.sql.SQLException;
 public class AuraDatabase {
     private final @NotNull ConnectionSource connectionSource;
     @Getter
-    private final @NotNull Dao<? extends CAuraUser, Integer> users;
+    private final @NotNull Dao<AuraUser, Integer> users;
     @Getter
     private final @NotNull Dao<AuraDonate, Integer> donates;
 
-    public <T extends CAuraUser> AuraDatabase(String url, String username, String password, Class<T> userClass) throws SQLException {
+    public AuraDatabase(String url, String username, String password) throws SQLException {
         this.connectionSource = new JdbcConnectionSource(url, username, password);
         this.users = DaoManager.createDao(
                 this.connectionSource,
-                userClass
+                AuraUser.class
         );
         this.donates = DaoManager.createDao(
                 this.connectionSource,
@@ -39,7 +39,7 @@ public class AuraDatabase {
         try {
             this.users.queryForFirst();
         } catch (Exception e) {
-            TableUtils.createTableIfNotExists(this.connectionSource, CAuraUser.class);
+            TableUtils.createTableIfNotExists(this.connectionSource, AuraUser.class);
         }
         try {
             this.donates.queryForFirst();

@@ -40,7 +40,7 @@ http_server:
   external_url: "http://localhost:23160"
 
 mysql:
-  connection_url: ""
+  url: ""
   login: ""
   password: ""
 

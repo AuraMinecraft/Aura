@@ -1,7 +1,8 @@
 package net.aniby.aura.discord;
 
 import net.aniby.aura.AuraBackend;
-import net.aniby.aura.modules.AuraUser;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.service.UserService;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
@@ -11,8 +12,12 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class DiscordListener extends ListenerAdapter {
+    @Autowired
+    UserService userService;
+
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         AuraBackend.getHandler().executeDiscord(event);
@@ -34,18 +39,18 @@ public class DiscordListener extends ListenerAdapter {
             return;
 
         User user = event.getUser();
-        AuraUser CAuraUser = AuraUser.getByWith("discord_id", user.getId());
-        if (CAuraUser == null)
+        AuraUser auraUser = userService.getByWith("discord_id", user.getId());
+        if (auraUser == null)
             return;
 
         Member member = event.getMember();
         try {
-            member.modifyNickname(CAuraUser.getPlayerName()).queue();
-            if (CAuraUser.getTwitchId() != null)
+            member.modifyNickname(auraUser.getPlayerName()).queue();
+            if (auraUser.getTwitchId() != null)
                 guild.addRoleToMember(user, AuraBackend.getDiscord().getRoles().get("twitch")).queue();
         } catch (Exception exception) {
             AuraBackend.getLogger().info(
-                    "Can't modify guild member. User: @" + event.getUser().getName() + ", nickname: " + CAuraUser.getPlayerName()
+                    "Can't modify guild member. User: @" + event.getUser().getName() + ", nickname: " + auraUser.getPlayerName()
             );
         }
     }
