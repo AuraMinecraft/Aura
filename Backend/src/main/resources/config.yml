@@ -1,0 +1,204 @@
+aura:
+  allow_only_if:
+    has_streamer_role: true
+    streaming: true
+  need_for_form: 5.0
+  per_points: 500
+  per_ruble: 50
+  donate_promo_multiplier: 1.2
+  donate_promo_returns: 0.2
+  viewer_amplifier: 10
+
+donation:
+  yoomoney:
+    redirect_uri: "https://api.aniby.net/donate"
+    access_token: ""
+    client_id: ""
+    client_secret: ""
+    notification_secret: ""
+  donationalerts:
+    token: ""
+    url: ""
+  currency_map:
+    EUR: 95
+    USD: 85
+    RUB: 1
+    BRL: 15
+    TRY: 2.5
+    BYN: 24
+    KZT: 0.15
+    UAH: 2.1
+
+socket:
+  secret_key: "0m3G@_S3cr3t_K&y!"
+  port: 3089
+
+http_server:
+  hostname: "0.0.0.0"
+  port: 23160
+  threads: 2
+  external_url: "http://localhost:23160"
+
+mysql:
+  connection_url: ""
+  login: ""
+  password: ""
+
+discord:
+  bot_token: ""
+  default_guild: ""
+  invite_url: ""
+  roles:
+    player: ""
+    form_sent: ""
+    twitch: ""
+    streamer: ""
+  channels:
+    streams: ""
+    start_forms: ""
+    log_forms: ""
+    logs: ""
+
+twitch:
+  application:
+    client_id: ""
+    client_secret: ""
+
+form:
+  log_embed: '{"title": "Новая заявка!", "description": "Заполнял - <@<discord_id>>", "fields":[{"name": "<field_nickname_label>", "value": "<field_nickname_value>", "inline": false}, {"name": "<field_age_label>", "value": "<field_age_value>", "inline": false}]}'
+  start_embed: '{"title":"Заполните заявку!","color":null,"description":"Типа что-то,\nчто нам нужно"}'
+  button_label: "Оставить заявку"
+  modal:
+    label: "Анкета"
+    questions:
+      nickname: # НЕ МЕНЯТЬ ID НА ЭТОЙ СТРОЧКЕ!
+        position: 1
+        label: "Никнейм"
+        placeholder: "An1by"
+        style: SHORT
+      age:
+        position: 2
+        label: "Возраст"
+        style: PARAGRAPH
+        required: false
+
+embeds:
+  go_live:
+    title: "<stream_title>"
+    url: "<twitch_url>"
+    color: 10180863
+    author:
+      name: "<twitch_name>"
+      url: "<twitch_url>"
+      icon_url: "<twitch_avatar_url>"
+    footer:
+      text: "Стримы Twitch"
+      icon_url: "https://cdn.discordapp.com/attachments/1208770310950883378/1215851310474203199/twitch-logo-1.png?ex=65fe40c5&is=65ebcbc5&hm=c0bef61d2378b734f7bb1feb757de86f636bc53f3cbef3a3fa54753af047a989&"
+    fields:
+      - name: "Ссылка на трансляцию"
+        value: "<twitch_url>"
+        inline: true
+      - name: "Игра"
+        value: "<stream_game>"
+        inline: true
+  aura_reject:
+    title: "Возврат баллов у стримера <streamer_name>"
+    url: "https://twitch.tv/<streamer_name>"
+    color: 10180863
+    author:
+      name: "<viewer_name>"
+      url: "https://twitch.tv/<viewer_name>"
+      icon_url: "<avatar>"
+    footer:
+      text: "Twitch"
+      icon_url: "https://cdn.discordapp.com/attachments/1208770310950883378/1215851310474203199/twitch-logo-1.png?ex=65fe40c5&is=65ebcbc5&hm=c0bef61d2378b734f7bb1feb757de86f636bc53f3cbef3a3fa54753af047a989&"
+    fields:
+      - name: "Отозвано у пользователя"
+        value: "<rejected_aura>"
+        inline: true
+      - name: "Отозвано у стримера"
+        value: "<rejected_streamer_aura>"
+        inline: true
+  donate:
+    title: "Новое пожертвование!"
+    description: "Пользователь: <discord_mention> | Пригласивший: <promo_discord_mention>"
+    color: 10180863
+    author:
+      name: "<user_name>"
+      url: "https://twitch.tv/<twitch_name>"
+      icon_url: "<avatar>"
+    footer:
+      text: "Donate"
+      icon_url: "https://media.discordapp.net/attachments/1208770310950883378/1215864497865232404/donate_PNG12.png?ex=65fe4d0d&is=65ebd80d&hm=9abf0167dc464dd6659c497d9f94a75e1c1dfc4358bee3f97bac89153fc29c04&=&format=webp&quality=lossless&width=522&height=347"
+    fields:
+      - name: "Процент пригласившего"
+        value: "<earned_rubles>"
+        inline: true
+      - name: "Получено ауры"
+        value: "<earned_aura>"
+        inline: true
+      - name: "Всего ауры"
+        value: "<aura>"
+        inline: true
+  earned_aura:
+    title: "Трата баллов у стримера <streamer_name>"
+    url: "https://twitch.tv/<streamer_name>"
+    color: 10180863
+    author:
+      name: "<viewer_name>"
+      url: "https://twitch.tv/<viewer_name>"
+      icon_url: "<avatar>"
+    footer:
+      text: "Twitch"
+      icon_url: "https://cdn.discordapp.com/attachments/1208770310950883378/1215851310474203199/twitch-logo-1.png?ex=65fe40c5&is=65ebcbc5&hm=c0bef61d2378b734f7bb1feb757de86f636bc53f3cbef3a3fa54753af047a989&"
+    fields:
+      - name: "Получено стримером"
+        value: "<streamer_earned_aura>"
+        inline: true
+      - name: "Получено ауры"
+        value: "<earned_aura>"
+        inline: true
+      - name: "Всего ауры"
+        value: "<aura>"
+        inline: true
+
+messages:
+  go_live: "<twitch_name> начал стрим! ||@everyone||"
+  go_offline: "<twitch_name> закончил стрим"
+  twitch_icon_url: "https://cdn.discordapp.com/attachments/1208770310950883378/1215851310474203199/twitch-logo-1.png?ex=65fe40c5&is=65ebcbc5&hm=c0bef61d2378b734f7bb1feb757de86f636bc53f3cbef3a3fa54753af047a989&"
+  something_went_wrong: "Что-то пошло не так! Свяжитесь с разработчиком"
+  donate_yoomoney: "Перейдите по ссылке ниже и оплатите пожертвование через кошелек ЮMoney или банковскую карту."
+  donate_donationalerts: "Перейдите по ссылке ниже и оплатите пожертвование.\n> Для выдачи награды за пожертвование **обязательно** укажите **только** ваш Discord ID (`<discord_id>`) в комментарии к пожертвованию."
+  donate_notify: "Пришло пожертвование размером в <donate_amount> RUB!\nСпасибо за ваш вклад в развитие проекта!\n\n> Начислено: <earned_aura> ауры"
+  donate_notify_referral: "<discord_mention> (<user_name>) оплатил пожертвование в размере <donate_amount> RUB\nВаша реферальная сумма: <earned_rubles> RUB"
+  not_streamer: "Этот пользователь не является стримером!"
+  already_used_promo: "Вы уже указывали пользователя, пригласившего вас (<promo_discord_mention>)"
+  unknown_action: "Неизвестное действие!"
+  forcelink_success: "Вы успешно привязали <social> к аккаунту <user_name>"
+  unlink_success: "Вы успешно отвязали <social> от аккаунта <user_name>!"
+  no_permission: "Недостаточно прав!"
+  not_in_guild: "Вы не находитесь на основном сервере Discord!"
+  user_not_found: "Пользователь не найден!"
+  aura_command: "У вас <aura> ауры!"
+  lc_twitch_link: "Для привязки Twitch к вашему аккаунту нажмите на кнопку ниже."
+  lc_twitch_link_button_label: "Открыть"
+  lc_twitch_already_linked: "Twitch уже привязан к вашему аккаунту!"
+  lc_twitch_successfully_linked: "Twitch-аккаунт <twitch_name> успешно привязан к <discord_mention>!"
+  reload_success: "Вы перезагрузили плагин!"
+  invalid_executor: "Неизвестный исполнитель!"
+  jf_already_written: "Вы уже писали анкету!"
+  jf_nickname_error: "Произошла ошибка! Никнейм не найден! Обратитесь к администратору!"
+  jf_button_accept: "Принять"
+  jf_button_decline: "Отклонить"
+  jf_sent: "Вы отправили свою заявку на рассмотрение!"
+  jf_accepted: "<discord_mention> (`<discord_name>`/`<player_name>`) был принят на сервер администратором <admin_mention>!"
+  jf_declined: "Анкета discord_mention (`<discord_name>`/`<player_name>`) была отклонена администратором <admin_mention>!"
+  jf_accepted_target: "<discord_mention>, вы были приняты на сервер администратором <admin_mention>"
+  jf_declined_target: "<discord_mention>, ваша анкета была отклонена администратором <admin_mention>"
+  need_linked_twitch: "Вам нужно иметь привязанный аккаунт Twitch!"
+  not_enough_aura: "У вас недостаточно ауры! (<aura>/<need_aura>)"
+  profile: "Профиль пользователя <selector_name>\n<>Никнейм Minecraft: <player_name>\nTwitch: https://twitch.tv/<twitch_name>\nDiscord: <discord_mention> / `@<discord_name>` / `<discord_id>`\n\nАура: <aura>"
+  user_already_exists: "Пользователь с такими данными уже существует!"
+  profile_whitelist_added: "Игрок <player_name> добавлен в White-List!"
+  profile_whitelist_removed: "Игрок <player_name> удален с White-List!"
+  player_name_not_found: "Не найден никнейм Minecraft!"
