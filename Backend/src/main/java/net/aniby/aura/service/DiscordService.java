@@ -59,11 +59,11 @@ public class DiscordService extends ListenerAdapter {
         this.handler = new CommandHandler(this.jda);
         this.handler.registerCommands(
                 new AuraCommand(config, userService),
-                new LinkCommand(config, userService, userRepository, twitchService),
-                new ForceLinkCommand(config, userService, userRepository),
-                new UnlinkCommand(config, userService, userRepository, twitchService),
-                new AuraLinkCommand(config),
-                new ProfileCommand(config, userService, userRepository),
+                new LinkCommand(config, userService, userRepository, twitchService, this),
+                new ForceLinkCommand(config, userService, userRepository, this),
+                new UnlinkCommand(config, userService, userRepository, twitchService, this),
+                new AuraLinkCommand(config, this),
+                new ProfileCommand(config, userService, userRepository, this),
                 new DonateCommand(config, userService, userRepository, yooMoneyService)
         );
         handler.confirm();

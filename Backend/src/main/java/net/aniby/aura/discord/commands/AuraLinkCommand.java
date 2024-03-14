@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
+import net.aniby.aura.service.DiscordService;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -21,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 @AllArgsConstructor
 public class AuraLinkCommand implements ACommand {
     AuraConfig config;
+    DiscordService discordService;
 
     public void execute(@Nullable String argument) {
         try {
@@ -46,7 +48,7 @@ public class AuraLinkCommand implements ACommand {
         }
 
         // Check in guild
-        Guild guild = AuraBackend.getDiscord().getDefaultGuild();
+        Guild guild = discordService.getDefaultGuild();
         Member member;
         try {
             member = guild.retrieveMember(source).complete();

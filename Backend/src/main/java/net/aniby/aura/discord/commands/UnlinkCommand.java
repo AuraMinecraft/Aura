@@ -6,6 +6,7 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.TwitchService;
 import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.Replacer;
@@ -32,6 +33,7 @@ public class UnlinkCommand implements ACommand {
     UserService userService;
     UserRepository userRepository;
     TwitchService twitchService;
+    DiscordService discordService;
 
     public boolean hasPermission(SlashCommandInteractionEvent event) {
         // Init variables
@@ -43,7 +45,7 @@ public class UnlinkCommand implements ACommand {
         }
 
         // Check in guild
-        Guild guild = AuraBackend.getDiscord().getDefaultGuild();
+        Guild guild = discordService.getDefaultGuild();
         Member member;
         try {
             member = guild.retrieveMember(source).complete();

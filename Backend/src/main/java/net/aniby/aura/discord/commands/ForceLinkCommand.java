@@ -6,6 +6,7 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
@@ -28,6 +29,7 @@ public class ForceLinkCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
+    DiscordService discordService;
 
     public boolean hasPermission(SlashCommandInteractionEvent event) {
         // Init variables
@@ -39,7 +41,7 @@ public class ForceLinkCommand implements ACommand {
         }
 
         // Check in guild
-        Guild guild = AuraBackend.getDiscord().getDefaultGuild();
+        Guild guild = discordService.getDefaultGuild();
         Member member;
         try {
             member = guild.retrieveMember(source).complete();

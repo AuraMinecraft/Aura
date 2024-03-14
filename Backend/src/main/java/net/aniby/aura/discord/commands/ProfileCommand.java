@@ -6,6 +6,7 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
@@ -26,6 +27,7 @@ public class ProfileCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
+    DiscordService discordService;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
@@ -126,7 +128,7 @@ public class ProfileCommand implements ACommand {
 
         // Check in guild
         try {
-            AuraBackend.getDiscord().getDefaultGuild().retrieveMember(user).complete();
+            discordService.getDefaultGuild().retrieveMember(user).complete();
         } catch (ErrorResponseException exception) {
             event.getHook().editOriginal(
                     config.getMessage("not_in_guild")

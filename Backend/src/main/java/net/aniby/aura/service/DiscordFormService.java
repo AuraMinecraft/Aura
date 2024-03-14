@@ -70,9 +70,8 @@ public class DiscordFormService {
         // Add role
         User target = userService.getDiscordUser(auraUser);
 
-        DiscordService irc = AuraBackend.getDiscord();
-        Role addRole = irc.getRoles().get("player");
-        irc.getDefaultGuild().addRoleToMember(target, addRole).queue();
+        Role addRole = discordService.getRoles().get("player");
+        discordService.getDefaultGuild().addRoleToMember(target, addRole).queue();
 
         try {
             target.openPrivateChannel().flatMap(privateChannel ->
@@ -158,16 +157,15 @@ public class DiscordFormService {
         logStringEmbed = config.replaceMessage(logStringEmbed, tags);
 
 
-        DiscordService irc = AuraBackend.getDiscord();
         try {
-            Role addRole = irc.getRoles().get("form_sent");
-            irc.getDefaultGuild().addRoleToMember(user, addRole).queue();
+            Role addRole = discordService.getRoles().get("form_sent");
+            discordService.getDefaultGuild().addRoleToMember(user, addRole).queue();
         } catch (Exception ignored) {}
 
         try {
             Member member = userService.getGuildMember(auraUser);
             assert member != null;
-            irc.getDefaultGuild().modifyNickname(member, nickname).queue();
+            discordService.getDefaultGuild().modifyNickname(member, nickname).queue();
         } catch (Exception ignored) {}
 
         MessageEmbed embed = EmbedBuilder.fromData(
@@ -175,7 +173,7 @@ public class DiscordFormService {
         ).build();
 
         String userId = user.getId();
-        irc.getChannels().get("log_forms").sendMessageEmbeds(embed).setActionRow(
+        discordService.getChannels().get("log_forms").sendMessageEmbeds(embed).setActionRow(
                 Button.success(FORM_ACCEPT + userId, config.getMessage("jf_button_accept")),
                 Button.danger(FORM_DECLINE + userId, config.getMessage("jf_button_decline"))
         ).queue();
@@ -205,8 +203,8 @@ public class DiscordFormService {
             return;
         }
 
-        Role playerRole = AuraBackend.getDiscord().getRoles().get("player");
-        Role declinedFormRole = AuraBackend.getDiscord().getRoles().get("form_sent");
+        Role playerRole = discordService.getRoles().get("player");
+        Role declinedFormRole = discordService.getRoles().get("form_sent");
 
         Role role = member.getRoles().stream()
                 .filter(r -> r.getId().equals(declinedFormRole.getId()) || r.getId().equals(playerRole.getId()))

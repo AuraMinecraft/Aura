@@ -8,6 +8,7 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.twitch.TwitchIRC;
 import net.aniby.aura.twitch.TwitchLinkState;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -26,7 +27,7 @@ import java.util.Map;
 public class LinkService {
     UserRepository userRepository;
     UserService userService;
-    TwitchBot twitchBot;
+    TwitchIRC twitchIRC;
     AuraConfig config;
     TwitchService twitchService;
 
@@ -36,7 +37,7 @@ public class LinkService {
         if (state == null || !state.getDiscordId().equals(id))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-        String url = twitchBot.generateOAuthCodeRequest(state.getUuid());
+        String url = twitchIRC.generateOAuthCodeRequest(state.getUuid());
         response.sendRedirect(url);
     }
 
@@ -45,7 +46,7 @@ public class LinkService {
         if (discordId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-        Map.Entry<String, Map<String, String>> entry = twitchBot.generateOAuthTokenRequest(code);
+        Map.Entry<String, Map<String, String>> entry = twitchIRC.generateOAuthTokenRequest(code);
         String url = entry.getKey();
         Map<String, String> body = entry.getValue();
 

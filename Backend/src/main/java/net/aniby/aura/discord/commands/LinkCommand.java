@@ -6,6 +6,7 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.TwitchService;
 import net.aniby.aura.service.UserService;
 import net.dv8tion.jda.api.entities.User;
@@ -22,6 +23,7 @@ public class LinkCommand implements ACommand {
     UserService userService;
     UserRepository userRepository;
     TwitchService twitchService;
+    DiscordService discordService;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
@@ -37,7 +39,7 @@ public class LinkCommand implements ACommand {
 
         // Check in guild
         try {
-            AuraBackend.getDiscord().getDefaultGuild().retrieveMember(user).complete();
+            discordService.getDefaultGuild().retrieveMember(user).complete();
         } catch (ErrorResponseException exception) {
             event.getHook().editOriginal(
                     config.getMessage("not_in_guild")

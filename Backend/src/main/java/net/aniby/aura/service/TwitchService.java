@@ -43,13 +43,15 @@ public class TwitchService {
     UserService userService;
     UserRepository userRepository;
     DiscordLoggerService loggerService;
+    DiscordService discordService;
 
-    public TwitchService(TwitchIRC twitchIRC, DiscordLoggerService loggerService, AuraConfig config, UserService userService, UserRepository userRepository) {
+    public TwitchService(TwitchIRC twitchIRC, DiscordService discordService, DiscordLoggerService loggerService, AuraConfig config, UserService userService, UserRepository userRepository) {
         this.twitchIRC = twitchIRC;
         this.config = config;
         this.userService = userService;
         this.userRepository = userRepository;
         this.loggerService = loggerService;
+        this.discordService = discordService;
 
         this.rewardCost = config.getRoot().getNode("aura", "per_points").getDouble();
 
@@ -107,7 +109,7 @@ public class TwitchService {
             avatarUrl = twitchUser.getProfileImageUrl();
         replacerList.add(r("twitch_avatar_url", avatarUrl));
 
-        TextChannel channel = AuraBackend.getDiscord().getChannels().get("streams");
+        TextChannel channel = discordService.getChannels().get("streams");
 
         String type = stream != null ? "go_live" : "go_offline";
         MessageCreateAction message;
