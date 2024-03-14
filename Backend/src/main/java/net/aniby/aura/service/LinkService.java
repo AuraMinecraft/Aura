@@ -8,7 +8,6 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.repository.UserRepository;
-import net.aniby.aura.twitch.TwitchBot;
 import net.aniby.aura.twitch.TwitchLinkState;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -29,6 +28,7 @@ public class LinkService {
     UserService userService;
     TwitchBot twitchBot;
     AuraConfig config;
+    TwitchService twitchService;
 
 
     public void auth(HttpServletResponse response, String code, String id) throws IOException {
@@ -64,7 +64,7 @@ public class LinkService {
             if (streamer == null)
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
-            twitchBot.registerStreamer(streamer);
+            twitchService.registerStreamer(streamer);
 
             String redirectURL = config.getRoot().getNode("discord", "invite_url").getString();
             response.sendRedirect(redirectURL);

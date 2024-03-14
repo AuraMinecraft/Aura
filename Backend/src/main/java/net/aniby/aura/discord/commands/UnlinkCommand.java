@@ -1,10 +1,13 @@
 package net.aniby.aura.discord.commands;
 
+import lombok.AllArgsConstructor;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.BackendTools;
 import net.aniby.aura.discord.ACommand;
-import net.aniby.aura.modules.AuraUser;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.TwitchService;
+import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -23,7 +26,13 @@ import java.util.Locale;
 
 import static net.aniby.aura.tool.Replacer.r;
 
+@AllArgsConstructor
 public class UnlinkCommand implements ACommand {
+    AuraConfig config;
+    UserService userService;
+    UserRepository userRepository;
+    TwitchService twitchService;
+
     public boolean hasPermission(SlashCommandInteractionEvent event) {
         // Init variables
         User source = event.getUser();
@@ -51,7 +60,6 @@ public class UnlinkCommand implements ACommand {
         event.deferReply(true).queue();
 
         User source = event.getUser();
-        AuraConfig config = AuraBackend.getConfig();
 
         if (!hasPermission(event)) {
             event.getHook().editOriginal(
@@ -63,7 +71,7 @@ public class UnlinkCommand implements ACommand {
         String identifier = event.getOption("identifier").getAsString(),
                 social = event.getOption("social").getAsString();
 
-        AuraUser user = BackendTools.extractBySocialSelector(identifier);
+        AuraUser user = userService.extractBySocialSelector(identifier);
         if (user == null) {
             event.getHook().editOriginal(config.getMessage("user_not_found"))
                     .queue();
@@ -77,21 +85,19 @@ public class UnlinkCommand implements ACommand {
                 user.setRefreshToken(null);
                 user.setTwitchId(null);
                 user.setTwitchName(null);
-                user.setExpiresAt(0);
-                user.setAccessToken(null);
             }
         }
-        user.save();
+        userRepository.update(user);
 
         social = social.toLowerCase(Locale.ROOT);
         String formattedSocial = social.substring(0, 1).toUpperCase() + social.substring(1);
 
-        List<Replacer> tags = user.getReplacers();
+        List<Replacer> tags = userService.getReplacers(user);
 
         tags.addAll(List.of(
                 r("social", formattedSocial),
                 r("admin_name", source.getName()),
-                r("selector_name", BackendTools.extractNameBySocialSelector(identifier))
+                r("selector_name", userService.extractNameBySocialSelector(identifier))
         ));
         event.getHook().editOriginal(config.getMessage("unlink_success", tags))
                 .queue();

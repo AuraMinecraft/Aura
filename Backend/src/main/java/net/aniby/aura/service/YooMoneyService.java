@@ -31,15 +31,17 @@ public class YooMoneyService {
 
     UserRepository userRepository;
     DonateRepository donateRepository;
+    DiscordLoggerService loggerService;
 
     UserService userService;
     AuraConfig config;
 
     @Autowired
     @SneakyThrows
-    public YooMoneyService(AuraConfig config, AuraCache yooMoneyCache, UserRepository userRepository, DonateRepository donateRepository, UserService userService) {
+    public YooMoneyService(AuraConfig config, AuraCache yooMoneyCache, DiscordLoggerService loggerService, UserRepository userRepository, DonateRepository donateRepository, UserService userService) {
         this.userService = userService;
         this.config = config;
+        this.loggerService = loggerService;
 
         ConfigurationNode node = config.getRoot().getNode("donation", "yoomoney");
         this.notificationSecret = node.getNode("notification_secret").getString();
@@ -100,7 +102,7 @@ public class YooMoneyService {
         AuraDonate donate = new AuraDonate(0, user, amount, aura, timestamp);
         donateRepository.update(donate);
 
-        AuraBackend.getDiscord().getLogger().donate(donate, aura, returnsRubles);
+        loggerService.donate(donate, aura, returnsRubles);
         return donate;
     }
 

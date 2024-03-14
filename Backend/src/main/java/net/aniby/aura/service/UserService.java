@@ -4,17 +4,16 @@ import com.github.twitch4j.domain.ChannelCache;
 import com.github.twitch4j.helix.domain.User;
 import com.j256.ormlite.stmt.Where;
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.discord.DiscordIRC;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.mysql.AuraDatabase;
 import net.aniby.aura.repository.UserRepository;
 import net.aniby.aura.tool.Replacer;
 import net.aniby.aura.twitch.AccessData;
-import net.aniby.aura.twitch.TwitchBot;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -32,26 +31,20 @@ import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 import java.util.*;
 
+import static net.aniby.aura.tool.AuraUtils.onlyDigits;
 import static net.aniby.aura.tool.Replacer.r;
 
 import net.aniby.aura.entity.AuraUser;
 
 @Service
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
     AuraConfig config;
     AuraDatabase database;
     UserRepository userRepository;
     TwitchBot twitchBot;
-
-    @Autowired
-    @SneakyThrows
-    public UserService(AuraConfig config, TwitchBot twitchBot, AuraDatabase database, UserRepository userRepository) {
-        this.config = config;
-        this.userRepository = userRepository;
-        this.database = database;
-        this.twitchBot = twitchBot;
-    }
+    TwitchService twitchService;
 
 
     @SneakyThrows
@@ -96,7 +89,52 @@ public class UserService {
 
     public void init(AuraUser user) {
         if (user.getTwitchId() != null)
-            twitchBot.registerStreamer(user);
+            twitchService.registerStreamer(user);
+    }
+
+    @SneakyThrows
+    public @Nullable String extractNameBySocialSelector(@NotNull String identifier) {
+        AuraUser user;
+        if (identifier.startsWith("tid/") || identifier.startsWith("twitch_id/")) {
+            String twitchId = identifier.split("/", 2)[1];
+            user = getByWith("twitch_id", twitchId);
+            return user != null ? user.getTwitchName() : null;
+        } else if (identifier.startsWith("twitch/") || identifier.startsWith("t/")) {
+            return identifier.split("/", 2)[1];
+        } else if (identifier.startsWith("<@") && identifier.endsWith(">") && identifier.length() >= 20) {
+            String discordId = identifier.substring(2, identifier.length() - 1);
+            user = getByWith("discord_id", discordId);
+            if (user != null) {
+                net.dv8tion.jda.api.entities.User discordUser = getDiscordUser(user);
+                return discordUser != null ? discordUser.getName() : null;
+            }
+            return null;
+        } else if (onlyDigits(identifier) && identifier.length() >= 17) {
+            user = getByWith("discord_id", identifier);
+            if (user != null) {
+                net.dv8tion.jda.api.entities.User discordUser = getDiscordUser(user);
+                return discordUser != null ? discordUser.getName() : null;
+            }
+            return null;
+        }
+        return identifier;
+    }
+
+    public @Nullable AuraUser extractBySocialSelector(@NotNull String identifier) {
+        if (identifier.startsWith("tid/") || identifier.startsWith("twitch_id/")) {
+            String twitchId = identifier.split("/")[1];
+            return getByWith("twitch_id", twitchId);
+//        }
+//        else if (identifier.startsWith("twitch/") || identifier.startsWith("t/")) {
+//            String twitchName = identifier.split("/")[1];
+//            return CAuraUser.getByTwitchName(twitchName);
+        } else if (identifier.startsWith("<@") && identifier.endsWith(">") && identifier.length() >= 20) {
+            String discordId = identifier.replace("<@", "").replace(">", "");
+            return getByWith("discord_id", discordId);
+        } else if (onlyDigits(identifier) && identifier.length() >= 17) {
+            return getByWith("discord_id", identifier);
+        }
+        return getByWith("player_name", identifier);
     }
 
     // Constructors
@@ -288,7 +326,7 @@ public class UserService {
         }
 
         try {
-            DiscordIRC irc = AuraBackend.getDiscord();
+            DiscordService irc = AuraBackend.getDiscord();
             irc.getDefaultGuild().addRoleToMember(discordUser, irc.getRoles().get("twitch")).queue();
         } catch (Exception ignored) {
         }

@@ -1,8 +1,12 @@
-package net.aniby.aura.discord;
+package net.aniby.aura.service;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.repository.UserRepository;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
@@ -17,25 +21,31 @@ import net.dv8tion.jda.api.utils.data.DataObject;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class JoinForm {
-    @Autowired
+@Service
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class DiscordFormService {
     AuraConfig config;
+    DiscordService discordService;
+    UserService userService;
+    UserRepository userRepository;
 
-    public static final String FORM_ACCEPT = "auralink:form:accept:";
+    public final String FORM_ACCEPT = "auralink:form:accept:";
 
-    public static void buttonFormAccept(@NotNull ButtonInteractionEvent event) {
+    public void buttonFormAccept(@NotNull ButtonInteractionEvent event) {
         User source = event.getUser();
         String[] args = event.getComponentId().split(":");
         String discordId = args[3];
 
-        AuraUser auraUser = AuraUser.getByWith("discord_id", discordId);
-        if (auraUser == null || !auraUser.inGuild()) {
+        AuraUser auraUser = userService.getByWith("discord_id", discordId);
+        if (auraUser == null || !userService.inGuild(auraUser)) {
             event.editMessage(config.getMessage("not_in_guild"))
                     .setEmbeds(new ArrayList<>()).setComponents(new ArrayList<>()).queue();
             return;
@@ -48,9 +58,9 @@ public class JoinForm {
         }
 
         auraUser.setWhitelisted(true);
-        auraUser.save();
+        userRepository.update(auraUser);
 
-        List<Replacer> tags = auraUser.getReplacers();
+        List<Replacer> tags = userService.getReplacers(auraUser);
         tags.add(Replacer.r("admin_mention", source.getAsMention()));
         // Logging
         AuraBackend.getLogger().info(
@@ -58,9 +68,9 @@ public class JoinForm {
         );
 
         // Add role
-        User target = auraUser.getDiscordUser();
+        User target = userService.getDiscordUser(auraUser);
 
-        DiscordIRC irc = AuraBackend.getDiscord();
+        DiscordService irc = AuraBackend.getDiscord();
         Role addRole = irc.getRoles().get("player");
         irc.getDefaultGuild().addRoleToMember(target, addRole).queue();
 
@@ -74,31 +84,30 @@ public class JoinForm {
         event.editMessage(config.getMessage("jf_accepted", tags)).setEmbeds(new ArrayList<>()).setComponents(new ArrayList<>()).queue();
     }
 
-    public static final String FORM_DECLINE = "auralink:form:decline:";
+    public final String FORM_DECLINE = "auralink:form:decline:";
 
-    public static void buttonFormDecline(@NotNull ButtonInteractionEvent event) {
-        AuraConfig config = AuraBackend.getConfig();
+    public void buttonFormDecline(@NotNull ButtonInteractionEvent event) {
         User source = event.getUser();
         String[] args = event.getComponentId().split(":");
         String discordId = args[3];
 
-        AuraUser CAuraUser = AuraUser.getByWith("discord_id", discordId);
-        if (CAuraUser == null || !CAuraUser.inGuild()) {
+        AuraUser auraUser = userService.getByWith("discord_id", discordId);
+        if (auraUser == null || !userService.inGuild(auraUser)) {
             event.editMessage(config.getMessage("not_in_guild"))
                     .setEmbeds(new ArrayList<>()).setComponents(new ArrayList<>()).queue();
             return;
         }
 
-        List<Replacer> tags = CAuraUser.getReplacers();
+        List<Replacer> tags = userService.getReplacers(auraUser);
         tags.add(Replacer.r("admin_mention", source.getAsMention()));
         // Logging
         AuraBackend.getLogger().info(
-                "\u001B[36m" + CAuraUser.getPlayerName() + "\u001B[37m form was \u001B[31mdeclined \u001B[37mby \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
+                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m form was \u001B[31mdeclined \u001B[37mby \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
         );
 
         // Add role
         try {
-            User target = CAuraUser.getDiscordUser();
+            User target = userService.getDiscordUser(auraUser);
             if (target != null)
                 target.openPrivateChannel().flatMap(privateChannel ->
                         privateChannel.sendMessage(config.getMessage("jf_declined_target", tags))
@@ -108,13 +117,12 @@ public class JoinForm {
         event.editMessage(config.getMessage("jf_declined", tags)).setEmbeds(new ArrayList<>()).setComponents(new ArrayList<>()).queue();
     }
 
-    public static final String FORM_SUBMIT = "auralink:form:submit";
-    public static void modalFormSubmit(@NotNull ModalInteractionEvent event) {
+    public final String FORM_SUBMIT = "auralink:form:submit";
+    public void modalFormSubmit(@NotNull ModalInteractionEvent event) {
         event.deferReply(true).queue();
 
         User user = event.getUser();
 
-        AuraConfig config = AuraBackend.getConfig();
         ConfigurationNode root = config.getRoot();
         ConfigurationNode section = root
                 .getNode("form", "modal", "questions");
@@ -141,23 +149,23 @@ public class JoinForm {
             return;
         }
 
-        AuraUser auraUser = AuraUser.getByWith("discord_id", user.getId());
+        AuraUser auraUser = userService.getByWith("discord_id", user.getId());
         assert auraUser != null;
         auraUser.setPlayerName(nickname);
-        auraUser.save();
+        userRepository.update(auraUser);
 
-        tags.addAll(auraUser.getReplacers());
+        tags.addAll(userService.getReplacers(auraUser));
         logStringEmbed = config.replaceMessage(logStringEmbed, tags);
 
 
-        DiscordIRC irc = AuraBackend.getDiscord();
+        DiscordService irc = AuraBackend.getDiscord();
         try {
             Role addRole = irc.getRoles().get("form_sent");
             irc.getDefaultGuild().addRoleToMember(user, addRole).queue();
         } catch (Exception ignored) {}
 
         try {
-            Member member = auraUser.getGuildMember();
+            Member member = userService.getGuildMember(auraUser);
             assert member != null;
             irc.getDefaultGuild().modifyNickname(member, nickname).queue();
         } catch (Exception ignored) {}
@@ -175,23 +183,21 @@ public class JoinForm {
         event.getHook().editOriginal(config.getMessage("jf_sent")).queue();
     }
 
-    public static final String FORM_CREATE = "auralink:form:create";
+    public final String FORM_CREATE = "auralink:form:create";
 
-    public static void buttonFormCreate(@NotNull ButtonInteractionEvent event) {
-        AuraConfig config = AuraBackend.getConfig();
-
+    public void buttonFormCreate(@NotNull ButtonInteractionEvent event) {
         Member member = event.getMember();
         if (member == null)
             return;
 
-        AuraUser user = AuraUser.getByWith("discord_id", event.getUser().getId());
+        AuraUser user = userService.getByWith("discord_id", event.getUser().getId());
         if (user == null || user.getRefreshToken() == null) {
             event.reply(config.getMessage("need_linked_twitch")).setEphemeral(true).queue();
             return;
         }
         double needAura = config.getRoot().getNode("aura", "need_for_form").getDouble();
 
-        List<Replacer> tags =user.getReplacers();
+        List<Replacer> tags = userService.getReplacers(user);
         tags.add(Replacer.r("need_aura", String.valueOf(Math.floor(needAura * 100) / 100)));
 
         if (user.getAura() < needAura) {
@@ -213,8 +219,8 @@ public class JoinForm {
         event.replyModal(getModal()).queue();
     }
 
-    public static Modal getModal() {
-        ConfigurationNode modalSection = AuraBackend.getConfig().getRoot().getNode("form", "modal");
+    public Modal getModal() {
+        ConfigurationNode modalSection = config.getRoot().getNode("form", "modal");
         List<ActionRow> rows = getSubjects(modalSection.getNode("questions"));
 
         return Modal.create(FORM_SUBMIT, modalSection.getNode("label").getString("Анкета"))
@@ -222,7 +228,7 @@ public class JoinForm {
                 .build();
     }
 
-    private static List<ActionRow> getSubjects(ConfigurationNode node) {
+    private List<ActionRow> getSubjects(ConfigurationNode node) {
         List<ActionRow> subjects = new ArrayList<>();
 
         Set<String> keys = AuraConfig.getNodeKeys(node);

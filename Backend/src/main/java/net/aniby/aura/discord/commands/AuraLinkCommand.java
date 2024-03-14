@@ -1,5 +1,6 @@
 package net.aniby.aura.discord.commands;
 
+import lombok.AllArgsConstructor;
 import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
@@ -17,15 +18,18 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.Nullable;
 
+@AllArgsConstructor
 public class AuraLinkCommand implements ACommand {
+    AuraConfig config;
+
     public void execute(@Nullable String argument) {
         try {
             if (argument != null) {
                 switch (argument) {
-                    case "config" -> AuraBackend.getConfig().load();
+                    case "config" -> config.load();
                 }
             } else {
-                AuraBackend.getConfig().load();
+                config.load();
             }
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -59,8 +63,6 @@ public class AuraLinkCommand implements ACommand {
         event.deferReply(true).queue();
 
         User source = event.getUser();
-        AuraConfig config = AuraBackend.getConfig();
-
         if (!hasPermission(event)) {
             event.getHook().editOriginal(
                     config.getMessage("no_permission")

@@ -1,9 +1,12 @@
 package net.aniby.aura.discord.commands;
 
-import net.aniby.aura.AuraBackend;
-import net.aniby.aura.modules.AuraUser;
-import net.aniby.aura.discord.ACommand;
+import lombok.AllArgsConstructor;
 import net.aniby.aura.AuraConfig;
+import net.aniby.aura.discord.ACommand;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.UserService;
+import net.aniby.aura.service.YooMoneyService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,26 +20,32 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import java.util.List;
 import java.util.Objects;
 
+@AllArgsConstructor
+
 public class DonateCommand implements ACommand {
+    AuraConfig config;
+    UserService userService;
+    UserRepository userRepository;
+    YooMoneyService yooMoneyService;
+
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
 
         User user = event.getUser();
         if (user.isBot()) {
-            event.getHook().editOriginal(AuraBackend.getConfig().getMessage("invalid_executor")).queue();
+            event.getHook().editOriginal(config.getMessage("invalid_executor")).queue();
             return;
         }
-        AuraConfig config = AuraBackend.getConfig();
 
         String discordId = user.getId();
-        AuraUser auraUser = AuraUser.getByWith("discord_id", discordId);
+        AuraUser auraUser = userService.getByWith("discord_id", discordId);
         if (auraUser == null || auraUser.getRefreshToken() == null) {
             event.getHook().editOriginal(config.getMessage("need_linked_twitch")).queue();
             return;
         }
 
-        List<Replacer> replacerList = auraUser.getReplacers();
+        List<Replacer> replacerList = userService.getReplacers(auraUser);
 
         OptionMapping promoMapping = event.getOption("promo_user");
         if (promoMapping != null) {
@@ -52,9 +61,9 @@ public class DonateCommand implements ACommand {
 
             if (identifier.startsWith("twitch/") || identifier.startsWith("t/") || identifier.startsWith("twitch.tv/")) {
                 String twitchName = identifier.split("/", 2)[1];
-                AuraUser inviter = AuraUser.getByWith("twitch_name", twitchName);
+                AuraUser inviter = userService.getByWith("twitch_name", twitchName);
 
-                if (inviter == null || !inviter.isStreamer()) {
+                if (inviter == null || !userService.isStreamer(inviter)) {
                     event.getHook().editOriginal(
                             config.getMessage("not_streamer", replacerList)
                     ).queue();
@@ -69,7 +78,7 @@ public class DonateCommand implements ACommand {
                 }
 
                 auraUser.setPromoDiscordId(inviter.getDiscordId());
-                auraUser.save();
+                userRepository.update(auraUser);
             }
         }
 
@@ -80,7 +89,7 @@ public class DonateCommand implements ACommand {
         String url;
         try {
             url = Objects.equals(paymentType, "yoomoney")
-                    ? AuraBackend.getDonation().createYooMoneyDonateURL(user.getId(), amount)
+                    ? yooMoneyService.createURL(user.getId(), amount)
                     : config.getRoot().getNode("donation", "donationalerts", "url").getString();
             if (url == null || url.isEmpty())
                 throw new RuntimeException("DonationAlerts URL is empty!");

@@ -1,7 +1,6 @@
 package net.aniby.aura.service;
 
 import com.github.philippheuer.events4j.core.EventManager;
-import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.events.ChannelGoOfflineEvent;
@@ -21,12 +20,12 @@ import net.aniby.aura.repository.UserRepository;
 import net.aniby.aura.tool.AuraUtils;
 import net.aniby.aura.tool.ConsoleColors;
 import net.aniby.aura.tool.Replacer;
-import net.aniby.aura.twitch.TwitchBot;
+import net.aniby.aura.twitch.TwitchIRC;
+import net.aniby.aura.twitch.TwitchLinkState;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
 import ninja.leaping.configurate.ConfigurationNode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedInputStream;
@@ -40,23 +39,34 @@ import static net.aniby.aura.tool.Replacer.r;
 public class TwitchService {
     AuraConfig config;
     double rewardCost;
-    TwitchBot twitchBot;
+    TwitchIRC twitchIRC;
     UserService userService;
     UserRepository userRepository;
+    DiscordLoggerService loggerService;
 
-    public TwitchService(TwitchBot twitchBot, AuraConfig config, UserService userService, UserRepository userRepository) {
-        this.twitchBot = twitchBot;
+    public TwitchService(TwitchIRC twitchIRC, DiscordLoggerService loggerService, AuraConfig config, UserService userService, UserRepository userRepository) {
+        this.twitchIRC = twitchIRC;
         this.config = config;
         this.userService = userService;
         this.userRepository = userRepository;
+        this.loggerService = loggerService;
 
         this.rewardCost = config.getRoot().getNode("aura", "per_points").getDouble();
 
-        EventManager manager = this.twitchBot.getClient().getEventManager();
+        EventManager manager = twitchIRC.getClient().getEventManager();
         manager.onEvent(RewardRedeemedEvent.class, this::onRewardRedeemed);
         manager.onEvent(RedemptionStatusUpdateEvent.class, this::onRedemptionStatusUpdate);
         manager.onEvent(ChannelGoLiveEvent.class, this::onGoLive);
         manager.onEvent(ChannelGoOfflineEvent.class, this::onGoOffline);
+    }
+
+    public String generateTwitchLink(String discordId) {
+        String url = config.getRoot().getNode("http_server", "external_url").getString();
+        if (!url.endsWith("/"))
+            url += "/";
+
+        TwitchLinkState state = new TwitchLinkState(discordId, AuraUtils.minute * 15);
+        return url + "link/auth/?id=" + discordId + "&code=" + state.getCode();
     }
 
     public void registerStreamer(AuraUser streamer) {
@@ -71,14 +81,14 @@ public class TwitchService {
         if (id == null || name == null)
             return;
 
-        boolean created = twitchBot.getClient().getClientHelper().enableStreamEventListener(id, name);
+        boolean created = twitchIRC.getClient().getClientHelper().enableStreamEventListener(id, name);
         if (!created) {
             AuraBackend.getLogger().info(ConsoleColors.RED + "Can't enable stream event listener for " + name + ConsoleColors.WHITE);
             return;
         }
 
         List<PubSubSubscription> subscriptionList = List.of(
-                twitchBot.getClient().getPubSub().listenForChannelPointsRedemptionEvents(twitchBot.getCredential(), id)
+                twitchIRC.getClient().getPubSub().listenForChannelPointsRedemptionEvents(twitchIRC.getCredential(), id)
         );
     }
 
@@ -165,7 +175,7 @@ public class TwitchService {
         viewer.setAura(viewer.getAura() - viewerRejectedAura);
         userRepository.update(viewer);
 
-        AuraBackend.getDiscord().getLogger().auraReject(viewerUser.getDisplayName(), viewer, streamer, streamerRejectedAura, viewerRejectedAura);
+        loggerService.auraReject(viewerUser.getDisplayName(), viewer, streamer, streamerRejectedAura, viewerRejectedAura);
     }
 
     public void onRewardRedeemed(RewardRedeemedEvent event) {
@@ -200,6 +210,6 @@ public class TwitchService {
         double viewerAura = userService.addAura(viewer, aura, streamer);
         userRepository.update(viewer);
 
-        AuraBackend.getDiscord().getLogger().viewerEarnedAura(viewerUser.getDisplayName(), viewer, viewerAura, streamer.getTwitchName(), streamerAura);
+        loggerService.viewerEarnedAura(viewerUser.getDisplayName(), viewer, viewerAura, streamer.getTwitchName(), streamerAura);
     }
 }
