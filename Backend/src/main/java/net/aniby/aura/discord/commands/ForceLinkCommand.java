@@ -1,8 +1,6 @@
 package net.aniby.aura.discord.commands;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import net.aniby.aura.AuraBackend;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
@@ -21,17 +19,26 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Locale;
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Service
+@FieldDefaults(makeFinal = true)
 public class ForceLinkCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
     DiscordService discordService;
+
+    public ForceLinkCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordService discordService) {
+        this.config = config;
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.discordService = discordService;
+    }
 
     public boolean hasPermission(SlashCommandInteractionEvent event) {
         // Init variables

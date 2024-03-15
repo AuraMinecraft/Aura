@@ -1,7 +1,6 @@
 package net.aniby.aura.discord.commands;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
@@ -11,12 +10,19 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Service
+@FieldDefaults(makeFinal = true)
 public class AuraCommand implements ACommand {
     AuraConfig config;
     UserService userService;
+
+    public AuraCommand(AuraConfig config, @Lazy UserService userService) {
+        this.config = config;
+        this.userService = userService;
+    }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {

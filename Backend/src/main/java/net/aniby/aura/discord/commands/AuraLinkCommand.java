@@ -1,8 +1,6 @@
 package net.aniby.aura.discord.commands;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import net.aniby.aura.AuraBackend;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.service.DiscordService;
@@ -19,12 +17,19 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Service
+@FieldDefaults(makeFinal = true)
 public class AuraLinkCommand implements ACommand {
     AuraConfig config;
     DiscordService discordService;
+
+    public AuraLinkCommand(AuraConfig config, @Lazy DiscordService discordService) {
+        this.config = config;
+        this.discordService = discordService;
+    }
 
     public void execute(@Nullable String argument) {
         try {

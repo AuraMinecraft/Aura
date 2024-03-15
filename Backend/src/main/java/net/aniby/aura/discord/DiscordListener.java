@@ -1,7 +1,8 @@
 package net.aniby.aura.discord;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.entity.AuraUser;
-import net.aniby.aura.service.DiscordCommandService;
 import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.UserService;
 import net.dv8tion.jda.api.entities.Guild;
@@ -13,28 +14,36 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
+@Service
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DiscordListener extends ListenerAdapter {
-    @Autowired
     UserService userService;
-    @Autowired
     DiscordService discordService;
-    @Autowired
-    DiscordCommandService discordCommandService;
+
+    public DiscordListener(
+            @Lazy UserService userService,
+            @Lazy DiscordService discordService
+            ) {
+        this.userService = userService;
+        this.discordService = discordService;
+    }
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        discordCommandService.getHandler().executeDiscord(event);
+        discordService.getHandler().executeDiscord(event);
     }
+
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        discordCommandService.getHandler().executeButton(event);
+        discordService.getHandler().executeButton(event);
     }
 
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
-        discordCommandService.getHandler().executeModal(event);
+        discordService.getHandler().executeModal(event);
     }
 
     @Override

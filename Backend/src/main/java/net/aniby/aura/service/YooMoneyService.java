@@ -15,6 +15,7 @@ import net.aniby.yoomoney.modules.notifications.IncomingNotification;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class YooMoneyService {
 
     @Autowired
     @SneakyThrows
-    public YooMoneyService(AuraConfig config, AuraCache yooMoneyCache, DiscordLoggerService loggerService, UserRepository userRepository, DonateRepository donateRepository, UserService userService) {
+    public YooMoneyService(AuraConfig config, AuraCache yooMoneyCache, DiscordLoggerService loggerService, UserRepository userRepository, DonateRepository donateRepository, @Lazy UserService userService) {
         this.userService = userService;
         this.config = config;
         this.loggerService = loggerService;
@@ -108,6 +109,9 @@ public class YooMoneyService {
 
     public String createURL(String discordId, double amount) throws IOException {
         String label = "discord:" + discordId;
-        return client.createQuickPayForm(amount, label);
+        System.out.println(discordId + " | " + amount);
+        String url = client.createQuickPayForm(amount, label);
+        System.out.println(url);
+        return url;
     }
 }

@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.utils.data.DataObject;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,13 +30,18 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DiscordFormService {
     AuraConfig config;
     DiscordService discordService;
     UserService userService;
     UserRepository userRepository;
+    public DiscordFormService(AuraConfig config, @Lazy DiscordService discordService, @Lazy UserService userService, UserRepository userRepository) {
+        this.config = config;
+        this.discordService = discordService;
+        this.userRepository = userRepository;
+        this.userService = userService;
+    }
 
     public final String FORM_ACCEPT = "auralink:form:accept:";
 

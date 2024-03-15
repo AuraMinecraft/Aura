@@ -2,10 +2,12 @@ package net.aniby.aura.discord.commands;
 
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.UserService;
 import net.aniby.aura.service.YooMoneyService;
 import net.aniby.aura.tool.Replacer;
@@ -18,17 +20,26 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
-
+@Service
+@FieldDefaults(makeFinal = true)
 public class DonateCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
     YooMoneyService yooMoneyService;
+
+    public DonateCommand(AuraConfig config, UserRepository userRepository, YooMoneyService yooMoneyService, @Lazy UserService userService) {
+        this.config = config;
+        this.userRepository = userRepository;
+        this.userService = userService;
+        this.yooMoneyService = yooMoneyService;
+    }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {

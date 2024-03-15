@@ -33,6 +33,7 @@ import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.Nullable;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedInputStream;
@@ -44,17 +45,12 @@ import java.util.Objects;
 
 import static net.aniby.aura.tool.Replacer.r;
 
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@ComponentScan("net.aniby.aura")
 public class TwitchIRC {
-    @Autowired
     AuraConfig config;
-    @Autowired
     UserService userService;
-    @Autowired
     UserRepository userRepository;
-    @Autowired
     DiscordLoggerService loggerService;
-    @Autowired
     DiscordService discordService;
 
     @Getter final double rewardCost;
@@ -64,7 +60,18 @@ public class TwitchIRC {
     @Getter final OAuth2Credential credential;
     @Getter final String redirectURI;
 
-    public TwitchIRC(String clientId, String clientSecret, String redirectURI) {
+    public TwitchIRC(AuraConfig config,
+    UserService userService,
+    UserRepository userRepository,
+    DiscordLoggerService loggerService,
+    DiscordService discordService,
+    String clientId, String clientSecret, String redirectURI) {
+        this.config = config;
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.loggerService = loggerService;
+        this.discordService = discordService;
+
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.redirectURI = redirectURI;

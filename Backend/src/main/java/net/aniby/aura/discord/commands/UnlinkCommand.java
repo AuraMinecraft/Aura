@@ -1,6 +1,6 @@
 package net.aniby.aura.discord.commands;
 
-import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
@@ -8,7 +8,6 @@ import net.aniby.aura.repository.UserRepository;
 import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.Replacer;
-import net.aniby.aura.twitch.TwitchIRC;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,19 +19,28 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Locale;
 
 import static net.aniby.aura.tool.Replacer.r;
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Service
+@FieldDefaults(makeFinal = true)
 public class UnlinkCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
     DiscordService discordService;
+
+    public UnlinkCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordService discordService) {
+        this.config = config;
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.discordService = discordService;
+    }
 
     public boolean hasPermission(SlashCommandInteractionEvent event) {
         // Init variables

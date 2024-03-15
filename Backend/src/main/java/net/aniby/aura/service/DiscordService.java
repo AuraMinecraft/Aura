@@ -3,12 +3,10 @@ package net.aniby.aura.service;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.CommandHandler;
 import net.aniby.aura.discord.DiscordListener;
 import net.aniby.aura.discord.commands.*;
-import net.aniby.aura.repository.UserRepository;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -31,6 +29,10 @@ import java.util.Objects;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DiscordService extends ListenerAdapter {
     AuraConfig config;
+    DiscordFormService discordFormService;
+
+    @Getter
+    final CommandHandler handler;
 
     @Getter
     final JDA jda;
@@ -41,15 +43,39 @@ public class DiscordService extends ListenerAdapter {
     @Getter
     final HashMap<String, TextChannel> channels = new HashMap<>();
 
-    public DiscordService(AuraConfig config) {
+    public DiscordService(AuraConfig config, DiscordListener discordListener, DiscordFormService discordFormService,
+                          AuraCommand auraCommand,
+                          LinkCommand linkCommand,
+                          ForceLinkCommand forceLinkCommand,
+                          UnlinkCommand unlinkCommand,
+                          AuraLinkCommand auraLinkCommand,
+                          ProfileCommand profileCommand,
+                          DonateCommand donateCommand) {
         this.config = config;
+        this.discordFormService = discordFormService;
 
         ConfigurationNode node = config.getRoot().getNode("discord");
         this.jda = JDABuilder.createDefault(
-                node.getNode("bot_token").getString()
-        ).setActivity(Activity.of(Activity.ActivityType.STREAMING, "aura.aniby.net"))
-                .addEventListeners(new DiscordListener(), this)
+                        node.getNode("bot_token").getString()
+                ).setActivity(Activity.of(Activity.ActivityType.STREAMING, "aura.aniby.net"))
+                .addEventListeners(discordListener, this)
                 .build();
+
+        this.handler = new CommandHandler(this.getJda());
+        this.handler.registerCommands(
+                auraCommand,
+                linkCommand,
+                forceLinkCommand,
+                unlinkCommand,
+                auraLinkCommand,
+                profileCommand,
+                donateCommand
+        );
+        handler.confirm();
+        handler.registerButton(discordFormService.FORM_CREATE, discordFormService::buttonFormCreate);
+        handler.registerModal(discordFormService.FORM_SUBMIT, discordFormService::modalFormSubmit);
+        handler.registerButton(discordFormService.FORM_ACCEPT, discordFormService::buttonFormAccept);
+        handler.registerButton(discordFormService.FORM_DECLINE, discordFormService::buttonFormDecline);
     }
 
     @Override
@@ -75,6 +101,49 @@ public class DiscordService extends ListenerAdapter {
             channels.put(channelName, defaultGuild.getTextChannelById(
                     channelsNode.getNode(channelName).getString()
             ));
+        }
+
+        // Start messages
+        TextChannel startFormsChannel = this.getChannels().get("start_forms");
+        boolean clear = true;
+        try {
+            MessageHistory history = new MessageHistory(startFormsChannel);
+            List<Message> msgs = history.retrievePast(100).complete();
+
+            if (!msgs.isEmpty()) {
+                if (msgs.size() == 1) {
+                    Message message = msgs.get(0);
+                    ActionRow row = message.getActionRows().stream().filter(
+                            a -> {
+                                List<Button> buttons = a.getButtons();
+                                if (!buttons.isEmpty()) {
+                                    return buttons.stream().filter(b -> Objects.equals(b.getId(), discordFormService.FORM_CREATE))
+                                            .findFirst().orElse(null) != null;
+                                }
+                                return false;
+                            }
+                    ).findFirst().orElse(null);
+                    if (row != null) {
+                        clear = false;
+                    }
+                }
+
+                if (clear)
+                    startFormsChannel.deleteMessages(msgs).queue();
+            }
+        } catch (Exception exception) {
+        }
+        if (clear) {
+            ConfigurationNode formNode = config.getRoot().getNode("form");
+
+            MessageEmbed embed = EmbedBuilder.fromData(
+                    DataObject.fromJson(
+                            formNode.getNode("start_embed").getString()
+                    )
+            ).build();
+            startFormsChannel.sendMessageEmbeds(embed).addActionRow(
+                    Button.primary(discordFormService.FORM_CREATE, formNode.getNode("button_label").getString())
+            ).queue();
         }
     }
 }
