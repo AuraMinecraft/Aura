@@ -28,15 +28,8 @@ donation:
     KZT: 0.15
     UAH: 2.1
 
-socket:
-  secret_key: "0m3G@_S3cr3t_K&y!"
-  port: 3089
-
 http_server:
-  hostname: "0.0.0.0"
-  port: 23160
-  threads: 2
-  external_url: "http://localhost:23160"
+  external_url: "http://localhost:23160/"
 
 mysql:
   url: ""

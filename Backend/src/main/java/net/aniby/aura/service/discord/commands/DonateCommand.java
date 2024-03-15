@@ -96,9 +96,7 @@ public class DonateCommand implements ACommand {
         String paymentType = paymentTypeMapping != null ? paymentTypeMapping.getAsString() : "yoomoney";
 
         String url = config.getRoot().getNode("http_server", "external_url").getString();
-        if (!url.endsWith("/"))
-            url += "/";
-        url += "donate?method=" + paymentType + "&amount=" + amount + "&discord=" + user.getId();
+        url += "donate/?method=" + paymentType + "&amount=" + amount + "&discord=" + user.getId();
 
         event.getHook().editOriginal(
                 config.getMessage("donate_" + paymentType, replacerList)

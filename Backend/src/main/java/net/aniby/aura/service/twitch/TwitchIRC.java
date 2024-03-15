@@ -77,8 +77,6 @@ public class TwitchIRC {
         this.clientSecret = node.getNode("client_secret").getString();
 
         String url = config.getRoot().getNode("http_server", "external_url").getString();
-        if (!url.endsWith("/"))
-            url += "/";
         this.redirectURI = url + "link/twitch/";
 
         this.credential = new OAuth2Credential("twitch", this.generateAccessToken());
@@ -182,9 +180,6 @@ public class TwitchIRC {
 
     public String generateTwitchLink(String discordId) {
         String url = config.getRoot().getNode("http_server", "external_url").getString();
-        if (!url.endsWith("/"))
-            url += "/";
-
         TwitchLinkState state = new TwitchLinkState(discordId, AuraUtils.minute * 15);
         return url + "link/auth/?id=" + discordId + "&code=" + state.getCode();
     }
