@@ -24,7 +24,7 @@ public class LinkController {
     }
 
     @GetMapping(path = "/twitch")
-    public void twitch(HttpServletResponse response, @RequestParam String code, @RequestParam String state)
+    public void twitch(HttpServletResponse response, @RequestParam String code, @RequestParam String scope, @RequestParam String state)
             throws IOException, URISyntaxException, ParseException, InterruptedException {
         linkRest.twitch(response, code, state);
     }

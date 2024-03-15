@@ -135,12 +135,9 @@ public class DiscordIRC extends ListenerAdapter {
         if (clear) {
             ConfigurationNode formNode = config.getRoot().getNode("form");
 
-            MessageEmbed embed = EmbedBuilder.fromData(
-                    DataObject.fromJson(
-                            formNode.getNode("start_embed").getString()
-                    )
-            ).build();
-            startFormsChannel.sendMessageEmbeds(embed).addActionRow(
+            startFormsChannel.sendMessageEmbeds(
+                    config.getEmbed("form_start")
+            ).addActionRow(
                     Button.primary(discordForm.FORM_CREATE, formNode.getNode("button_label").getString())
             ).queue();
         }

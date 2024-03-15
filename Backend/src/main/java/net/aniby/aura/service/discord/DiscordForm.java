@@ -135,8 +135,6 @@ public class DiscordForm {
                 .getNode("form", "modal", "questions");
         Set<String> ids = AuraConfig.getNodeKeys(section);
 
-        String logStringEmbed = root.getNode("form", "log_embed").getString();
-
         List<Replacer> tags = new ArrayList<>();
         tags.add(Replacer.r("discord_id", user.getId()));
 
@@ -162,8 +160,6 @@ public class DiscordForm {
         userRepository.update(auraUser);
 
         tags.addAll(userService.getReplacers(auraUser));
-        logStringEmbed = config.replaceMessage(logStringEmbed, tags);
-
 
         try {
             Role addRole = discordIRC.getRoles().get("form_sent");
@@ -176,9 +172,7 @@ public class DiscordForm {
             discordIRC.getDefaultGuild().modifyNickname(member, nickname).queue();
         } catch (Exception ignored) {}
 
-        MessageEmbed embed = EmbedBuilder.fromData(
-                DataObject.fromJson(logStringEmbed)
-        ).build();
+        MessageEmbed embed = config.getEmbed("form_log", tags);
 
         String userId = user.getId();
         discordIRC.getChannels().get("log_forms").sendMessageEmbeds(embed).setActionRow(
@@ -197,7 +191,7 @@ public class DiscordForm {
             return;
 
         AuraUser user = userService.getByWith("discord_id", event.getUser().getId());
-        if (user == null || user.getRefreshToken() == null) {
+        if (user == null || user.getTwitchId() == null) {
             event.reply(config.getMessage("need_linked_twitch")).setEphemeral(true).queue();
             return;
         }

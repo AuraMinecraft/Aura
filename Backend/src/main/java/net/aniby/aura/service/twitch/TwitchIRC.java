@@ -77,7 +77,7 @@ public class TwitchIRC {
         this.clientSecret = node.getNode("client_secret").getString();
 
         String url = config.getRoot().getNode("http_server", "external_url").getString();
-        this.redirectURI = url + "link/twitch/";
+        this.redirectURI = url + "link/twitch";
 
         this.credential = new OAuth2Credential("twitch", this.generateAccessToken());
 
@@ -97,7 +97,11 @@ public class TwitchIRC {
         manager.onEvent(ChannelGoLiveEvent.class, this::onGoLive);
         manager.onEvent(ChannelGoOfflineEvent.class, this::onGoOffline);
 
-        database.getUsers().queryForAll().forEach(this::initUser);
+        database.getUsers().queryBuilder()
+                .where()
+                .isNotNull("refresh_token")
+                .query()
+                .forEach(this::initUser);
     }
 
     public boolean isStreamingNow(AuraUser user) {
@@ -181,7 +185,7 @@ public class TwitchIRC {
     public String generateTwitchLink(String discordId) {
         String url = config.getRoot().getNode("http_server", "external_url").getString();
         TwitchLinkState state = new TwitchLinkState(discordId, AuraUtils.minute * 15);
-        return url + "link/auth/?id=" + discordId + "&code=" + state.getCode();
+        return url + "link/auth?id=" + discordId + "&code=" + state.getCode();
     }
 
     public void registerStreamer(AuraUser streamer) {
@@ -233,13 +237,14 @@ public class TwitchIRC {
             replacerList.add(r("stream_title", stream.getTitle()));
             replacerList.add(r("stream_game", stream.getGameName()));
 
-            String thumbnail = stream.getThumbnailUrl(860, 480);
-            try {
-                BufferedInputStream image = AuraUtils.downloadFile(thumbnail);
-                message = message.addFiles(FileUpload.fromData(image, user.getTwitchName() + ".jpg"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            String thumbnail = stream.getThumbnailUrl(1280, 720);
+            replacerList.add(r("stream_thumbnail", thumbnail));
+//            try {
+//                BufferedInputStream image = AuraUtils.downloadFile(thumbnail);
+//                message = message.addFiles(FileUpload.fromData(image, user.getTwitchName() + ".jpg"));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
 
             message = message.addEmbeds(config.getEmbed(type, replacerList));
         }
