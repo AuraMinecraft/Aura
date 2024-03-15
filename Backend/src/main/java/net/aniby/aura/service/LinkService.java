@@ -7,7 +7,6 @@ import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
-import net.aniby.aura.repository.UserRepository;
 import net.aniby.aura.twitch.TwitchIRC;
 import net.aniby.aura.twitch.TwitchLinkState;
 import org.json.simple.JSONObject;
@@ -25,11 +24,9 @@ import java.util.Map;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LinkService {
-    UserRepository userRepository;
     UserService userService;
     TwitchIRC twitchIRC;
     AuraConfig config;
-    TwitchService twitchService;
 
 
     public void auth(HttpServletResponse response, String code, String id) throws IOException {
@@ -58,6 +55,7 @@ public class LinkService {
 
         if (object.containsKey("access_token") && object.containsKey("refresh_token")) {
             AuraUser streamer = userService.fromRequestData(
+                    twitchIRC,
                     discordId,
                     (String) object.get("access_token"),
                     (String) object.get("refresh_token")
@@ -65,7 +63,7 @@ public class LinkService {
             if (streamer == null)
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
-            twitchService.registerStreamer(streamer);
+            twitchIRC.registerStreamer(streamer);
 
             String redirectURL = config.getRoot().getNode("discord", "invite_url").getString();
             response.sendRedirect(redirectURL);

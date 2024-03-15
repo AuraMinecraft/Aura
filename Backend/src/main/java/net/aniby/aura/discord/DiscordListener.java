@@ -1,7 +1,8 @@
 package net.aniby.aura.discord;
 
-import net.aniby.aura.AuraBackend;
 import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.service.DiscordCommandService;
+import net.aniby.aura.service.DiscordService;
 import net.aniby.aura.service.UserService;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -17,25 +18,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DiscordListener extends ListenerAdapter {
     @Autowired
     UserService userService;
+    @Autowired
+    DiscordService discordService;
+    @Autowired
+    DiscordCommandService discordCommandService;
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        AuraBackend.getHandler().executeDiscord(event);
+        discordCommandService.getHandler().executeDiscord(event);
     }
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        AuraBackend.getHandler().executeButton(event);
+        discordCommandService.getHandler().executeButton(event);
     }
 
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
-        AuraBackend.getHandler().executeModal(event);
+        discordCommandService.getHandler().executeModal(event);
     }
 
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         Guild guild = event.getGuild();
-        if (!guild.equals(AuraBackend.getDiscord().getDefaultGuild()))
+        if (!guild.equals(discordService.getDefaultGuild()))
             return;
 
         User user = event.getUser();
@@ -47,11 +52,11 @@ public class DiscordListener extends ListenerAdapter {
         try {
             member.modifyNickname(auraUser.getPlayerName()).queue();
             if (auraUser.getTwitchId() != null)
-                guild.addRoleToMember(user, AuraBackend.getDiscord().getRoles().get("twitch")).queue();
+                guild.addRoleToMember(user, discordService.getRoles().get("twitch")).queue();
         } catch (Exception exception) {
-            AuraBackend.getLogger().info(
-                    "Can't modify guild member. User: @" + event.getUser().getName() + ", nickname: " + auraUser.getPlayerName()
-            );
+//            AuraBackend.getLogger().info(
+//                    "Can't modify guild member. User: @" + event.getUser().getName() + ", nickname: " + auraUser.getPlayerName()
+//            );
         }
     }
 }

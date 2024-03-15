@@ -26,6 +26,7 @@ public class AuraConfig {
 
     public AuraConfig(File file) throws IOException {
         this.loader = YAMLConfigurationLoader.builder().setPath(file.toPath()).build();
+        System.out.println(file.getAbsolutePath());
         load();
     }
 

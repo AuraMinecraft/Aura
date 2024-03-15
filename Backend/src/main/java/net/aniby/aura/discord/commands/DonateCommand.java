@@ -1,6 +1,7 @@
 package net.aniby.aura.discord.commands;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
@@ -16,11 +17,12 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Objects;
 
-@AllArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 
 public class DonateCommand implements ACommand {
     AuraConfig config;

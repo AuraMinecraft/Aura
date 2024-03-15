@@ -20,7 +20,7 @@ public class TwitchConfiguration {
     @Bean
     @SneakyThrows
     @Scope("singleton")
-    public TwitchIRC createTwitchBot() {
+    public TwitchIRC createTwitchIRC() {
         ConfigurationNode node = config.getRoot().getNode("twitch", "application");
         return new TwitchIRC(
                 node.getNode("client_id").getString(),

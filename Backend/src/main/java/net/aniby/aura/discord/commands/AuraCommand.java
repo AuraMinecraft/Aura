@@ -1,6 +1,7 @@
 package net.aniby.aura.discord.commands;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
@@ -10,8 +11,9 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@AllArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class AuraCommand implements ACommand {
     AuraConfig config;
     UserService userService;

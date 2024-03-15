@@ -1,15 +1,14 @@
 package net.aniby.aura.discord.commands;
 
-import lombok.AllArgsConstructor;
-import net.aniby.aura.AuraBackend;
+import lombok.RequiredArgsConstructor;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
 import net.aniby.aura.service.DiscordService;
-import net.aniby.aura.service.TwitchService;
 import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.Replacer;
+import net.aniby.aura.twitch.TwitchIRC;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -21,18 +20,18 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Locale;
 
 import static net.aniby.aura.tool.Replacer.r;
 
-@AllArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UnlinkCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
-    TwitchService twitchService;
     DiscordService discordService;
 
     public boolean hasPermission(SlashCommandInteractionEvent event) {

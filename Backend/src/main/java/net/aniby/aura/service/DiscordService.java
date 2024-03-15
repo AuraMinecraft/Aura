@@ -31,7 +31,6 @@ import java.util.Objects;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DiscordService extends ListenerAdapter {
     AuraConfig config;
-    DiscordFormService discordFormService;
 
     @Getter
     final JDA jda;
@@ -41,10 +40,8 @@ public class DiscordService extends ListenerAdapter {
     final HashMap<String, Role> roles = new HashMap<>();
     @Getter
     final HashMap<String, TextChannel> channels = new HashMap<>();
-    @Getter
-    final CommandHandler handler;
 
-    public DiscordService(AuraConfig config, UserService userService, UserRepository userRepository, TwitchService twitchService, YooMoneyService yooMoneyService, DiscordFormService discordFormService) {
+    public DiscordService(AuraConfig config) {
         this.config = config;
 
         ConfigurationNode node = config.getRoot().getNode("discord");
@@ -53,24 +50,6 @@ public class DiscordService extends ListenerAdapter {
         ).setActivity(Activity.of(Activity.ActivityType.STREAMING, "aura.aniby.net"))
                 .addEventListeners(new DiscordListener(), this)
                 .build();
-
-        this.discordFormService = discordFormService;
-
-        this.handler = new CommandHandler(this.jda);
-        this.handler.registerCommands(
-                new AuraCommand(config, userService),
-                new LinkCommand(config, userService, userRepository, twitchService, this),
-                new ForceLinkCommand(config, userService, userRepository, this),
-                new UnlinkCommand(config, userService, userRepository, twitchService, this),
-                new AuraLinkCommand(config, this),
-                new ProfileCommand(config, userService, userRepository, this),
-                new DonateCommand(config, userService, userRepository, yooMoneyService)
-        );
-        handler.confirm();
-        handler.registerButton(discordFormService.FORM_CREATE, discordFormService::buttonFormCreate);
-        handler.registerModal(discordFormService.FORM_SUBMIT, discordFormService::modalFormSubmit);
-        handler.registerButton(discordFormService.FORM_ACCEPT, discordFormService::buttonFormAccept);
-        handler.registerButton(discordFormService.FORM_DECLINE, discordFormService::buttonFormDecline);
     }
 
     @Override
@@ -96,53 +75,6 @@ public class DiscordService extends ListenerAdapter {
             channels.put(channelName, defaultGuild.getTextChannelById(
                     channelsNode.getNode(channelName).getString()
             ));
-        }
-
-        // Start messages
-        TextChannel startFormsChannel = channels.get("start_forms");
-        boolean clear = true;
-        try {
-            MessageHistory history = new MessageHistory(startFormsChannel);
-            List<Message> msgs = history.retrievePast(100).complete();
-
-            if (!msgs.isEmpty()) {
-                if (msgs.size() == 1) {
-                    Message message = msgs.get(0);
-                    ActionRow row = message.getActionRows().stream().filter(
-                            a -> {
-                                List<Button> buttons = a.getButtons();
-                                if (!buttons.isEmpty()) {
-                                    return buttons.stream().filter(b -> Objects.equals(b.getId(), discordFormService.FORM_CREATE))
-                                            .findFirst().orElse(null) != null;
-                                }
-                                return false;
-                            }
-                    ).findFirst().orElse(null);
-                    if (row != null) {
-                        AuraBackend.getLogger().info("Founded start message for creating form");
-                        clear = false;
-                    }
-                }
-
-                if (clear)
-                    startFormsChannel.deleteMessages(msgs).queue();
-            }
-        } catch (Exception exception) {
-            AuraBackend.getLogger().info(
-                    "\u001B[31mMessages in form channel can't be deleted! Delete it yourself!\u001B[37m"
-            );
-        }
-        if (clear) {
-            ConfigurationNode formNode = root.getNode("form");
-
-            MessageEmbed embed = EmbedBuilder.fromData(
-                    DataObject.fromJson(
-                            formNode.getNode("start_embed").getString()
-                    )
-            ).build();
-            startFormsChannel.sendMessageEmbeds(embed).addActionRow(
-                    Button.primary(discordFormService.FORM_CREATE, formNode.getNode("button_label").getString())
-            ).queue();
         }
     }
 }

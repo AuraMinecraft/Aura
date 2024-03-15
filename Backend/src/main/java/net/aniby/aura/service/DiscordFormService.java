@@ -63,9 +63,9 @@ public class DiscordFormService {
         List<Replacer> tags = userService.getReplacers(auraUser);
         tags.add(Replacer.r("admin_mention", source.getAsMention()));
         // Logging
-        AuraBackend.getLogger().info(
-                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m was \u001B[32madded \u001B[37mto server by \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
-        );
+//        AuraBackend.getLogger().info(
+//                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m was \u001B[32madded \u001B[37mto server by \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
+//        );
 
         // Add role
         User target = userService.getDiscordUser(auraUser);
@@ -100,9 +100,9 @@ public class DiscordFormService {
         List<Replacer> tags = userService.getReplacers(auraUser);
         tags.add(Replacer.r("admin_mention", source.getAsMention()));
         // Logging
-        AuraBackend.getLogger().info(
-                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m form was \u001B[31mdeclined \u001B[37mby \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
-        );
+//        AuraBackend.getLogger().info(
+//                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m form was \u001B[31mdeclined \u001B[37mby \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
+//        );
 
         // Add role
         try {

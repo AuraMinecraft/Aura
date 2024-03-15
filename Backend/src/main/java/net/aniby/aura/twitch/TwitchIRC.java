@@ -1,66 +1,170 @@
-package net.aniby.aura.service;
+package net.aniby.aura.twitch;
 
+import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
+import com.github.twitch4j.TwitchClient;
+import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.common.events.domain.EventChannel;
+import com.github.twitch4j.domain.ChannelCache;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.events.ChannelGoOfflineEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
-import com.github.twitch4j.pubsub.PubSubSubscription;
 import com.github.twitch4j.pubsub.domain.ChannelPointsRedemption;
 import com.github.twitch4j.pubsub.domain.ChannelPointsUser;
 import com.github.twitch4j.pubsub.events.RedemptionStatusUpdateEvent;
 import com.github.twitch4j.pubsub.events.RewardRedeemedEvent;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.DiscordLoggerService;
+import net.aniby.aura.service.DiscordService;
+import net.aniby.aura.service.UserService;
 import net.aniby.aura.tool.AuraUtils;
-import net.aniby.aura.tool.ConsoleColors;
 import net.aniby.aura.tool.Replacer;
-import net.aniby.aura.twitch.TwitchIRC;
-import net.aniby.aura.twitch.TwitchLinkState;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
 import ninja.leaping.configurate.ConfigurationNode;
+import org.jetbrains.annotations.Nullable;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedInputStream;
+import java.net.http.HttpResponse;
+import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static net.aniby.aura.tool.Replacer.r;
 
-@Service
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class TwitchService {
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class TwitchIRC {
+    @Autowired
     AuraConfig config;
-    double rewardCost;
-    TwitchIRC twitchIRC;
+    @Autowired
     UserService userService;
+    @Autowired
     UserRepository userRepository;
+    @Autowired
     DiscordLoggerService loggerService;
+    @Autowired
     DiscordService discordService;
 
-    public TwitchService(TwitchIRC twitchIRC, DiscordService discordService, DiscordLoggerService loggerService, AuraConfig config, UserService userService, UserRepository userRepository) {
-        this.twitchIRC = twitchIRC;
-        this.config = config;
-        this.userService = userService;
-        this.userRepository = userRepository;
-        this.loggerService = loggerService;
-        this.discordService = discordService;
+    @Getter final double rewardCost;
+    @Getter final String clientId;
+    @Getter final String clientSecret;
+    @Getter final TwitchClient client;
+    @Getter final OAuth2Credential credential;
+    @Getter final String redirectURI;
+
+    public TwitchIRC(String clientId, String clientSecret, String redirectURI) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.redirectURI = redirectURI;
+
+        this.credential = new OAuth2Credential("twitch", this.generateAccessToken());
+
+        this.client = TwitchClientBuilder.builder()
+                .withEnableHelix(true)
+                .withEnablePubSub(true)
+                .withClientId(this.clientId)
+                .withClientSecret(this.clientSecret)
+                .withDefaultAuthToken(this.credential)
+                .build();
 
         this.rewardCost = config.getRoot().getNode("aura", "per_points").getDouble();
 
-        EventManager manager = twitchIRC.getClient().getEventManager();
+        EventManager manager = this.client.getEventManager();
         manager.onEvent(RewardRedeemedEvent.class, this::onRewardRedeemed);
         manager.onEvent(RedemptionStatusUpdateEvent.class, this::onRedemptionStatusUpdate);
         manager.onEvent(ChannelGoLiveEvent.class, this::onGoLive);
         manager.onEvent(ChannelGoOfflineEvent.class, this::onGoOffline);
     }
+
+    public boolean isStreamingNow(AuraUser user) {
+        return user.getTwitchId() != null && client.getClientHelper()
+                .getCachedInformation(user.getTwitchId())
+                .map(ChannelCache::getIsLive).orElse(false);
+    }
+
+    public @Nullable User getTwitchUser(AuraUser user) {
+        try {
+            if (user.getTwitchId() != null)
+                return client.getHelix()
+                        .getUsers(null, List.of(user.getTwitchId()), null)
+                        .execute()
+                        .getUsers()
+                        .get(0);
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    public void initUser(AuraUser user) {
+        if (user.getTwitchId() != null)
+            registerStreamer(user);
+    }
+
+    private String generateAccessToken() {
+        try {
+            Map<String, String> body = Map.of(
+                    "client_id", this.clientId,
+                    "client_secret", this.clientSecret,
+                    "grant_type", "client_credentials"
+            );
+            HttpResponse<String> response = IOHelper.post("https://id.twitch.tv/oauth2/token", body);
+            JSONObject object = IOHelper.parse(response);
+
+            if (object.containsKey("access_token"))
+                return (String) object.get("access_token");
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        }
+        return null;
+    }
+
+    public String generateOAuthCodeRequest(String state) {
+        //  user:read:subscriptions
+        String scopes = "channel:read:redemptions channel:read:subscriptions";
+        return "https://id.twitch.tv/oauth2/authorize?client_id=" + clientId + "&redirect_uri=" + redirectURI + "&response_type=code&scope=" + scopes + "&state=" + state;
+    }
+
+    public Map.Entry<String, Map<String, String>> generateOAuthTokenRequest(String code) {
+        Map<String, String> headers = Map.of(
+                "client_id", this.clientId,
+                "client_secret", this.clientSecret,
+                "code", code,
+                "grant_type", "authorization_code",
+                "redirect_uri", redirectURI
+        );
+        return new AbstractMap.SimpleEntry<>(
+                "https://id.twitch.tv/oauth2/token", headers
+        );
+    }
+
+    public Map.Entry<String, Map<String, String>> generateRefreshRequest(String refreshToken) {
+        Map<String, String> headers = Map.of(
+                "client_id", this.clientId,
+                "client_secret", this.clientSecret,
+                "grant_type", "refresh_token",
+                "refresh_token", refreshToken
+        );
+        return new AbstractMap.SimpleEntry<>(
+                "https://id.twitch.tv/oauth2/token", headers
+        );
+    }
+
+    public void sendMessage(String channel, String message) {
+        this.getClient().getChat().sendMessage(channel, message);
+    }
+
 
     public String generateTwitchLink(String discordId) {
         String url = config.getRoot().getNode("http_server", "external_url").getString();
@@ -75,7 +179,7 @@ public class TwitchService {
         String name = streamer.getTwitchName(),
                 id = streamer.getTwitchId();
         if (name == null) {
-            userService.updateTwitchName(streamer);
+            updateTwitchName(streamer);
             name = streamer.getTwitchName();
             userRepository.update(streamer);
         }
@@ -83,15 +187,12 @@ public class TwitchService {
         if (id == null || name == null)
             return;
 
-        boolean created = twitchIRC.getClient().getClientHelper().enableStreamEventListener(id, name);
+        boolean created = client.getClientHelper().enableStreamEventListener(id, name);
         if (!created) {
-            AuraBackend.getLogger().info(ConsoleColors.RED + "Can't enable stream event listener for " + name + ConsoleColors.WHITE);
             return;
         }
 
-        List<PubSubSubscription> subscriptionList = List.of(
-                twitchIRC.getClient().getPubSub().listenForChannelPointsRedemptionEvents(twitchIRC.getCredential(), id)
-        );
+        client.getPubSub().listenForChannelPointsRedemptionEvents(this.getCredential(), id);
     }
 
     void onStream(Stream stream, EventChannel eventChannel) {
@@ -104,7 +205,7 @@ public class TwitchService {
         replacerList.add(r("twitch_url", "https://twitch.tv/" + eventChannel.getName()));
 
         String avatarUrl = config.getMessage("twitch_icon_url");
-        User twitchUser = userService.getTwitchUser(user);
+        User twitchUser = getTwitchUser(user);
         if (twitchUser != null)
             avatarUrl = twitchUser.getProfileImageUrl();
         replacerList.add(r("twitch_avatar_url", avatarUrl));
@@ -138,6 +239,16 @@ public class TwitchService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean updateTwitchName(AuraUser auraUser) {
+        User user = getTwitchUser(auraUser);
+        if (user != null) {
+            auraUser.setTwitchName(user.getDisplayName());
+            userRepository.update(auraUser);
+            return true;
+        }
+        return false;
     }
 
     void onGoLive(ChannelGoLiveEvent event) {
@@ -199,7 +310,7 @@ public class TwitchService {
         boolean allowIfStreaming = allows.getNode("streaming").getBoolean(false);
         if (allowIfHasRole && !userService.isStreamer(streamer))
             return;
-        if (allowIfStreaming && !userService.isStreamingNow(streamer))
+        if (allowIfStreaming && !isStreamingNow(streamer))
             return;
 
         double aura = redemption.getReward().getCost() / rewardCost;
