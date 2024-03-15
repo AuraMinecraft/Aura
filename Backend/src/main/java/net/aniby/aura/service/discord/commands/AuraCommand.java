@@ -1,10 +1,10 @@
-package net.aniby.aura.discord.commands;
+package net.aniby.aura.service.discord.commands;
 
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
-import net.aniby.aura.service.UserService;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

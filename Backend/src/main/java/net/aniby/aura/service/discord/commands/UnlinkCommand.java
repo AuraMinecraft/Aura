@@ -1,12 +1,12 @@
-package net.aniby.aura.discord.commands;
+package net.aniby.aura.service.discord.commands;
 
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
-import net.aniby.aura.service.DiscordService;
-import net.aniby.aura.service.UserService;
+import net.aniby.aura.service.discord.DiscordIRC;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -25,19 +25,21 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Locale;
 
+import static net.aniby.aura.tool.Replacer.r;
+
 @Service
 @FieldDefaults(makeFinal = true)
-public class ForceLinkCommand implements ACommand {
+public class UnlinkCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
-    DiscordService discordService;
+    DiscordIRC discordIRC;
 
-    public ForceLinkCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordService discordService) {
+    public UnlinkCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordIRC discordIRC) {
         this.config = config;
         this.userService = userService;
         this.userRepository = userRepository;
-        this.discordService = discordService;
+        this.discordIRC = discordIRC;
     }
 
     public boolean hasPermission(SlashCommandInteractionEvent event) {
@@ -50,7 +52,7 @@ public class ForceLinkCommand implements ACommand {
         }
 
         // Check in guild
-        Guild guild = discordService.getDefaultGuild();
+        Guild guild = discordIRC.getDefaultGuild();
         Member member;
         try {
             member = guild.retrieveMember(source).complete();
@@ -63,6 +65,7 @@ public class ForceLinkCommand implements ACommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
+        // Init variables
         event.deferReply(true).queue();
 
         User source = event.getUser();
@@ -75,11 +78,9 @@ public class ForceLinkCommand implements ACommand {
         }
 
         String identifier = event.getOption("identifier").getAsString(),
-                social = event.getOption("social").getAsString(),
-                value = event.getOption("value").getAsString();
+                social = event.getOption("social").getAsString();
 
         AuraUser user = userService.extractBySocialSelector(identifier);
-
         if (user == null) {
             event.getHook().editOriginal(config.getMessage("user_not_found"))
                     .queue();
@@ -87,37 +88,45 @@ public class ForceLinkCommand implements ACommand {
         }
 
         switch (social) {
-            case "minecraft" -> {
-                user.setPlayerName(value);
-                userRepository.update(user);
-            }
-            case "discord" -> {
-                user.setDiscordId(value);
-                userRepository.update(user);
+            case "minecraft" -> user.setPlayerName(null);
+            case "discord" -> user.setDiscordId(null);
+            case "twitch" -> {
+                user.setRefreshToken(null);
+                user.setTwitchId(null);
+                user.setTwitchName(null);
             }
         }
+        userRepository.update(user);
 
         social = social.toLowerCase(Locale.ROOT);
         String formattedSocial = social.substring(0, 1).toUpperCase() + social.substring(1);
 
         List<Replacer> tags = userService.getReplacers(user);
-        tags.addAll(List.of(
-                Replacer.r("social", formattedSocial),
-                Replacer.r("admin_name", source.getName())
-        ));
-        event.getHook().editOriginal(config.getMessage("forcelink_success", tags))
-                .queue();
-    }
 
+        tags.addAll(List.of(
+                r("social", formattedSocial),
+                r("admin_name", source.getName()),
+                r("selector_name", userService.extractNameBySocialSelector(identifier))
+        ));
+        event.getHook().editOriginal(config.getMessage("unlink_success", tags))
+                .queue();
+
+//        Player player = user.getPlayer();
+//        if (player != null) {
+//            player.sendMessage(
+//                    config.getComponentMessage("unlink_success_target", tags)
+//            );
+//        }
+    }
 
     @Override
     public SlashCommandData slashCommandData() {
-        return Commands.slash("forcelink", "Привязывает сеть в AuraLink")
+        return Commands.slash("unlink", "Отвязывает сеть в AuraLink")
                 .addOption(OptionType.STRING, "identifier", "Индентификатор игрока", true, false)
-                .addOption(OptionType.STRING, "value", "Параметр, который нужно привязать", true, false)
-                .addOptions(new OptionData(OptionType.STRING, "social", "Тип параметра", true)
-                        .addChoice("Discord ID", "discord")
-                        .addChoice("Никнейм Minecraft", "minecraft")
+                .addOptions(new OptionData(OptionType.STRING, "social", "Сеть, которую нужно отвязать", true)
+                        .addChoice("Twitch", "twitch")
+                        .addChoice("Discord", "discord")
+                        .addChoice("Minecraft", "minecraft")
                 )
                 .setDefaultPermissions(
                         DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)

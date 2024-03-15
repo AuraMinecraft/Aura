@@ -78,6 +78,24 @@
             <artifactId>configurate-yaml</artifactId>
             <version>3.7.3</version>
         </dependency>
+        <!-- Discord -->
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>5.0.0-beta.19</version>
+        </dependency>
+        <!-- Twitch -->
+        <dependency>
+            <groupId>com.github.twitch4j</groupId>
+            <artifactId>twitch4j</artifactId>
+            <version>1.19.0</version>
+        </dependency>
+        <!-- Donate -->
+        <dependency>
+            <groupId>net.aniby.yoomoney</groupId>
+            <artifactId>YooMoneySDK</artifactId>
+            <version>0.7</version>
+        </dependency>
         <!-- Spring -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

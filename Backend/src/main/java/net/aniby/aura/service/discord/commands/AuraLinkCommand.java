@@ -1,9 +1,9 @@
-package net.aniby.aura.discord.commands;
+package net.aniby.aura.service.discord.commands;
 
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
-import net.aniby.aura.service.DiscordService;
+import net.aniby.aura.service.discord.DiscordIRC;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -24,11 +24,11 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(makeFinal = true)
 public class AuraLinkCommand implements ACommand {
     AuraConfig config;
-    DiscordService discordService;
+    DiscordIRC discordIRC;
 
-    public AuraLinkCommand(AuraConfig config, @Lazy DiscordService discordService) {
+    public AuraLinkCommand(AuraConfig config, @Lazy DiscordIRC discordIRC) {
         this.config = config;
-        this.discordService = discordService;
+        this.discordIRC = discordIRC;
     }
 
     public void execute(@Nullable String argument) {
@@ -55,7 +55,7 @@ public class AuraLinkCommand implements ACommand {
         }
 
         // Check in guild
-        Guild guild = discordService.getDefaultGuild();
+        Guild guild = discordIRC.getDefaultGuild();
         Member member;
         try {
             member = guild.retrieveMember(source).complete();

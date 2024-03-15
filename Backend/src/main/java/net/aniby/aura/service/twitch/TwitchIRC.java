@@ -1,4 +1,4 @@
-package net.aniby.aura.twitch;
+package net.aniby.aura.service.twitch;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.EventManager;
@@ -14,16 +14,16 @@ import com.github.twitch4j.pubsub.domain.ChannelPointsRedemption;
 import com.github.twitch4j.pubsub.domain.ChannelPointsUser;
 import com.github.twitch4j.pubsub.events.RedemptionStatusUpdateEvent;
 import com.github.twitch4j.pubsub.events.RewardRedeemedEvent;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.experimental.FieldDefaults;
+import lombok.SneakyThrows;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
+import net.aniby.aura.mysql.AuraDatabase;
 import net.aniby.aura.repository.UserRepository;
-import net.aniby.aura.service.DiscordLoggerService;
-import net.aniby.aura.service.DiscordService;
-import net.aniby.aura.service.UserService;
+import net.aniby.aura.service.discord.DiscordLogger;
+import net.aniby.aura.service.discord.DiscordIRC;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.AuraUtils;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -32,8 +32,7 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.Nullable;
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedInputStream;
@@ -45,13 +44,13 @@ import java.util.Objects;
 
 import static net.aniby.aura.tool.Replacer.r;
 
-@ComponentScan("net.aniby.aura")
+@Service
 public class TwitchIRC {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
-    DiscordLoggerService loggerService;
-    DiscordService discordService;
+    DiscordLogger loggerService;
+    DiscordIRC discordIRC;
 
     @Getter final double rewardCost;
     @Getter final String clientId;
@@ -60,21 +59,27 @@ public class TwitchIRC {
     @Getter final OAuth2Credential credential;
     @Getter final String redirectURI;
 
+    @SneakyThrows
     public TwitchIRC(AuraConfig config,
-    UserService userService,
-    UserRepository userRepository,
-    DiscordLoggerService loggerService,
-    DiscordService discordService,
-    String clientId, String clientSecret, String redirectURI) {
+                     @Lazy UserService userService,
+                     UserRepository userRepository,
+                     DiscordLogger loggerService,
+                     @Lazy DiscordIRC discordIRC,
+                     AuraDatabase database) {
         this.config = config;
         this.userService = userService;
         this.userRepository = userRepository;
         this.loggerService = loggerService;
-        this.discordService = discordService;
+        this.discordIRC = discordIRC;
 
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.redirectURI = redirectURI;
+        ConfigurationNode node = config.getRoot().getNode("twitch", "application");
+        this.clientId = node.getNode("client_id").getString();
+        this.clientSecret = node.getNode("client_secret").getString();
+
+        String url = config.getRoot().getNode("http_server", "external_url").getString();
+        if (!url.endsWith("/"))
+            url += "/";
+        this.redirectURI = url + "link/twitch/";
 
         this.credential = new OAuth2Credential("twitch", this.generateAccessToken());
 
@@ -93,6 +98,8 @@ public class TwitchIRC {
         manager.onEvent(RedemptionStatusUpdateEvent.class, this::onRedemptionStatusUpdate);
         manager.onEvent(ChannelGoLiveEvent.class, this::onGoLive);
         manager.onEvent(ChannelGoOfflineEvent.class, this::onGoOffline);
+
+        database.getUsers().queryForAll().forEach(this::initUser);
     }
 
     public boolean isStreamingNow(AuraUser user) {
@@ -217,7 +224,7 @@ public class TwitchIRC {
             avatarUrl = twitchUser.getProfileImageUrl();
         replacerList.add(r("twitch_avatar_url", avatarUrl));
 
-        TextChannel channel = discordService.getChannels().get("streams");
+        TextChannel channel = discordIRC.getChannels().get("streams");
 
         String type = stream != null ? "go_live" : "go_offline";
         MessageCreateAction message;
@@ -231,7 +238,7 @@ public class TwitchIRC {
             replacerList.add(r("stream_title", stream.getTitle()));
             replacerList.add(r("stream_game", stream.getGameName()));
 
-            String thumbnail = stream.getThumbnailUrl();
+            String thumbnail = stream.getThumbnailUrl(860, 480);
             try {
                 BufferedInputStream image = AuraUtils.downloadFile(thumbnail);
                 message = message.addFiles(FileUpload.fromData(image, user.getTwitchName() + ".jpg"));

@@ -1,12 +1,11 @@
-package net.aniby.aura.service;
+package net.aniby.aura.service.discord;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.CommandHandler;
-import net.aniby.aura.discord.DiscordListener;
-import net.aniby.aura.discord.commands.*;
+import net.aniby.aura.service.discord.commands.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -27,9 +26,9 @@ import java.util.Objects;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class DiscordService extends ListenerAdapter {
+public class DiscordIRC extends ListenerAdapter {
     AuraConfig config;
-    DiscordFormService discordFormService;
+    DiscordForm discordForm;
 
     @Getter
     final CommandHandler handler;
@@ -43,16 +42,16 @@ public class DiscordService extends ListenerAdapter {
     @Getter
     final HashMap<String, TextChannel> channels = new HashMap<>();
 
-    public DiscordService(AuraConfig config, DiscordListener discordListener, DiscordFormService discordFormService,
-                          AuraCommand auraCommand,
-                          LinkCommand linkCommand,
-                          ForceLinkCommand forceLinkCommand,
-                          UnlinkCommand unlinkCommand,
-                          AuraLinkCommand auraLinkCommand,
-                          ProfileCommand profileCommand,
-                          DonateCommand donateCommand) {
+    public DiscordIRC(AuraConfig config, DiscordListener discordListener, DiscordForm discordForm,
+                      AuraCommand auraCommand,
+                      LinkCommand linkCommand,
+                      ForceLinkCommand forceLinkCommand,
+                      UnlinkCommand unlinkCommand,
+                      AuraLinkCommand auraLinkCommand,
+                      ProfileCommand profileCommand,
+                      DonateCommand donateCommand) {
         this.config = config;
-        this.discordFormService = discordFormService;
+        this.discordForm = discordForm;
 
         ConfigurationNode node = config.getRoot().getNode("discord");
         this.jda = JDABuilder.createDefault(
@@ -72,10 +71,10 @@ public class DiscordService extends ListenerAdapter {
                 donateCommand
         );
         handler.confirm();
-        handler.registerButton(discordFormService.FORM_CREATE, discordFormService::buttonFormCreate);
-        handler.registerModal(discordFormService.FORM_SUBMIT, discordFormService::modalFormSubmit);
-        handler.registerButton(discordFormService.FORM_ACCEPT, discordFormService::buttonFormAccept);
-        handler.registerButton(discordFormService.FORM_DECLINE, discordFormService::buttonFormDecline);
+        handler.registerButton(discordForm.FORM_CREATE, discordForm::buttonFormCreate);
+        handler.registerModal(discordForm.FORM_SUBMIT, discordForm::modalFormSubmit);
+        handler.registerButton(discordForm.FORM_ACCEPT, discordForm::buttonFormAccept);
+        handler.registerButton(discordForm.FORM_DECLINE, discordForm::buttonFormDecline);
     }
 
     @Override
@@ -117,7 +116,7 @@ public class DiscordService extends ListenerAdapter {
                             a -> {
                                 List<Button> buttons = a.getButtons();
                                 if (!buttons.isEmpty()) {
-                                    return buttons.stream().filter(b -> Objects.equals(b.getId(), discordFormService.FORM_CREATE))
+                                    return buttons.stream().filter(b -> Objects.equals(b.getId(), discordForm.FORM_CREATE))
                                             .findFirst().orElse(null) != null;
                                 }
                                 return false;
@@ -142,7 +141,7 @@ public class DiscordService extends ListenerAdapter {
                     )
             ).build();
             startFormsChannel.sendMessageEmbeds(embed).addActionRow(
-                    Button.primary(discordFormService.FORM_CREATE, formNode.getNode("button_label").getString())
+                    Button.primary(discordForm.FORM_CREATE, formNode.getNode("button_label").getString())
             ).queue();
         }
     }

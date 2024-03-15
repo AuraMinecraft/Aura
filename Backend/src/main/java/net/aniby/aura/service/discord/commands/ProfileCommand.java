@@ -1,12 +1,12 @@
-package net.aniby.aura.discord.commands;
+package net.aniby.aura.service.discord.commands;
 
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
-import net.aniby.aura.service.DiscordService;
-import net.aniby.aura.service.UserService;
+import net.aniby.aura.service.discord.DiscordIRC;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
@@ -29,13 +29,13 @@ public class ProfileCommand implements ACommand {
     AuraConfig config;
     UserService userService;
     UserRepository userRepository;
-    DiscordService discordService;
+    DiscordIRC discordIRC;
 
-    public ProfileCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordService discordService) {
+    public ProfileCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordIRC discordIRC) {
         this.config = config;
         this.userService = userService;
         this.userRepository = userRepository;
-        this.discordService = discordService;
+        this.discordIRC = discordIRC;
     }
 
     @Override
@@ -137,7 +137,7 @@ public class ProfileCommand implements ACommand {
 
         // Check in guild
         try {
-            discordService.getDefaultGuild().retrieveMember(user).complete();
+            discordIRC.getDefaultGuild().retrieveMember(user).complete();
         } catch (ErrorResponseException exception) {
             event.getHook().editOriginal(
                     config.getMessage("not_in_guild")

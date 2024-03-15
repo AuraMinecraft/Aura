@@ -1,14 +1,17 @@
-package net.aniby.aura.service;
+package net.aniby.aura.service.donate;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraDonate;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.DonateRepository;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.user.UserService;
+import net.aniby.aura.service.discord.DiscordLogger;
 import net.aniby.aura.tool.AuraCache;
 import net.aniby.yoomoney.client.YooMoneyClient;
 import net.aniby.yoomoney.modules.notifications.IncomingNotification;
@@ -16,7 +19,9 @@ import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.Date;
@@ -24,22 +29,23 @@ import java.util.Map;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class YooMoneyService {
+public class DonateService {
     AuraCache yooMoneyCache;
 
+    @Getter
     YooMoneyClient client;
     String notificationSecret;
 
     UserRepository userRepository;
     DonateRepository donateRepository;
-    DiscordLoggerService loggerService;
+    DiscordLogger loggerService;
 
     UserService userService;
     AuraConfig config;
 
     @Autowired
     @SneakyThrows
-    public YooMoneyService(AuraConfig config, AuraCache yooMoneyCache, DiscordLoggerService loggerService, UserRepository userRepository, DonateRepository donateRepository, @Lazy UserService userService) {
+    public DonateService(AuraConfig config, AuraCache yooMoneyCache, DiscordLogger loggerService, UserRepository userRepository, DonateRepository donateRepository, @Lazy UserService userService) {
         this.userService = userService;
         this.config = config;
         this.loggerService = loggerService;
@@ -48,7 +54,7 @@ public class YooMoneyService {
         this.notificationSecret = node.getNode("notification_secret").getString();
         this.client = new YooMoneyClient(
                 node.getNode("client_id").getString(),
-                node.getNode("client_secret").getString()
+                node.getNode("access_token").getString()
         );
 
         this.yooMoneyCache = yooMoneyCache;
@@ -109,9 +115,17 @@ public class YooMoneyService {
 
     public String createURL(String discordId, double amount) throws IOException {
         String label = "discord:" + discordId;
-        System.out.println(discordId + " | " + amount);
-        String url = client.createQuickPayForm(amount, label);
-        System.out.println(url);
-        return url;
+        System.out.println(client);
+        return client.createQuickPayForm(amount, label);
+    }
+
+    public void processRest(HttpServletResponse response, String method, String discord, double amount) throws IOException {
+        switch (method) {
+            case "yoomoney":
+                String url = client.createQuickPayForm(amount, "discord:" + discord);
+                response.sendRedirect(url);
+                return;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 }

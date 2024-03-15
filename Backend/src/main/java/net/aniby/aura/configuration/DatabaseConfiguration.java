@@ -18,7 +18,6 @@ import java.io.File;
 @Configuration
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DatabaseConfiguration {
-
     @Autowired
     AuraConfig config;
 

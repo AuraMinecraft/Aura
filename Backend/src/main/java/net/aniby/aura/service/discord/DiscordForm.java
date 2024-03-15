@@ -1,12 +1,11 @@
-package net.aniby.aura.service;
+package net.aniby.aura.service.discord;
 
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
@@ -20,7 +19,8 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -31,14 +31,16 @@ import java.util.Set;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class DiscordFormService {
+public class DiscordForm {
+    Logger logger = LoggerFactory.getLogger(DiscordForm.class);
+
     AuraConfig config;
-    DiscordService discordService;
+    DiscordIRC discordIRC;
     UserService userService;
     UserRepository userRepository;
-    public DiscordFormService(AuraConfig config, @Lazy DiscordService discordService, @Lazy UserService userService, UserRepository userRepository) {
+    public DiscordForm(AuraConfig config, @Lazy DiscordIRC discordIRC, @Lazy UserService userService, UserRepository userRepository) {
         this.config = config;
-        this.discordService = discordService;
+        this.discordIRC = discordIRC;
         this.userRepository = userRepository;
         this.userService = userService;
     }
@@ -69,15 +71,15 @@ public class DiscordFormService {
         List<Replacer> tags = userService.getReplacers(auraUser);
         tags.add(Replacer.r("admin_mention", source.getAsMention()));
         // Logging
-//        AuraBackend.getLogger().info(
-//                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m was \u001B[32madded \u001B[37mto server by \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
-//        );
+        logger.info(
+                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m was \u001B[32madded \u001B[37mto server by \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
+        );
 
         // Add role
         User target = userService.getDiscordUser(auraUser);
 
-        Role addRole = discordService.getRoles().get("player");
-        discordService.getDefaultGuild().addRoleToMember(target, addRole).queue();
+        Role addRole = discordIRC.getRoles().get("player");
+        discordIRC.getDefaultGuild().addRoleToMember(target, addRole).queue();
 
         try {
             target.openPrivateChannel().flatMap(privateChannel ->
@@ -106,9 +108,9 @@ public class DiscordFormService {
         List<Replacer> tags = userService.getReplacers(auraUser);
         tags.add(Replacer.r("admin_mention", source.getAsMention()));
         // Logging
-//        AuraBackend.getLogger().info(
-//                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m form was \u001B[31mdeclined \u001B[37mby \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
-//        );
+        logger.info(
+                "\u001B[36m" + auraUser.getPlayerName() + "\u001B[37m form was \u001B[31mdeclined \u001B[37mby \u001B[33m(" + source.getName() + "/" + source.getId() + ")\u001B[37m"
+        );
 
         // Add role
         try {
@@ -164,14 +166,14 @@ public class DiscordFormService {
 
 
         try {
-            Role addRole = discordService.getRoles().get("form_sent");
-            discordService.getDefaultGuild().addRoleToMember(user, addRole).queue();
+            Role addRole = discordIRC.getRoles().get("form_sent");
+            discordIRC.getDefaultGuild().addRoleToMember(user, addRole).queue();
         } catch (Exception ignored) {}
 
         try {
             Member member = userService.getGuildMember(auraUser);
             assert member != null;
-            discordService.getDefaultGuild().modifyNickname(member, nickname).queue();
+            discordIRC.getDefaultGuild().modifyNickname(member, nickname).queue();
         } catch (Exception ignored) {}
 
         MessageEmbed embed = EmbedBuilder.fromData(
@@ -179,7 +181,7 @@ public class DiscordFormService {
         ).build();
 
         String userId = user.getId();
-        discordService.getChannels().get("log_forms").sendMessageEmbeds(embed).setActionRow(
+        discordIRC.getChannels().get("log_forms").sendMessageEmbeds(embed).setActionRow(
                 Button.success(FORM_ACCEPT + userId, config.getMessage("jf_button_accept")),
                 Button.danger(FORM_DECLINE + userId, config.getMessage("jf_button_decline"))
         ).queue();
@@ -209,8 +211,8 @@ public class DiscordFormService {
             return;
         }
 
-        Role playerRole = discordService.getRoles().get("player");
-        Role declinedFormRole = discordService.getRoles().get("form_sent");
+        Role playerRole = discordIRC.getRoles().get("player");
+        Role declinedFormRole = discordIRC.getRoles().get("form_sent");
 
         Role role = member.getRoles().stream()
                 .filter(r -> r.getId().equals(declinedFormRole.getId()) || r.getId().equals(playerRole.getId()))

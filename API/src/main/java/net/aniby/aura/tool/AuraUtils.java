@@ -1,9 +1,9 @@
 package net.aniby.aura.tool;
 
 import org.apache.commons.io.IOUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.net.URL;
@@ -27,7 +27,7 @@ public class AuraUtils {
         return salt.toString();
     }
 
-    public static @NotNull String extractDiscordId(@NotNull String string) {
+    public static @Nonnull String extractDiscordId(@Nonnull String string) {
         if (string.contains("@") && string.contains("<") && string.contains(">"))
             return string.substring(2, string.length() - 1);
         return string;

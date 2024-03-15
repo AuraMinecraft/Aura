@@ -8,16 +8,16 @@ import com.j256.ormlite.table.TableUtils;
 import lombok.Getter;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.entity.AuraDonate;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.sql.SQLException;
 
 public class AuraDatabase {
-    private final @NotNull ConnectionSource connectionSource;
+    private final @Nonnull ConnectionSource connectionSource;
     @Getter
-    private final @NotNull Dao<AuraUser, Integer> users;
+    private final @Nonnull Dao<AuraUser, Integer> users;
     @Getter
-    private final @NotNull Dao<AuraDonate, Integer> donates;
+    private final @Nonnull Dao<AuraDonate, Integer> donates;
 
     public AuraDatabase(String url, String username, String password) throws SQLException {
         this.connectionSource = new JdbcConnectionSource(url, username, password);

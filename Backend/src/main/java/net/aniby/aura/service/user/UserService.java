@@ -1,6 +1,5 @@
-package net.aniby.aura.service;
+package net.aniby.aura.service.user;
 
-import com.github.twitch4j.domain.ChannelCache;
 import com.github.twitch4j.helix.domain.User;
 import com.j256.ormlite.stmt.Where;
 import lombok.AccessLevel;
@@ -11,9 +10,10 @@ import net.aniby.aura.AuraConfig;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.mysql.AuraDatabase;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.discord.DiscordIRC;
 import net.aniby.aura.tool.Replacer;
-import net.aniby.aura.twitch.AccessData;
-import net.aniby.aura.twitch.TwitchIRC;
+import net.aniby.aura.service.twitch.AccessData;
+import net.aniby.aura.service.twitch.TwitchIRC;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -43,7 +43,7 @@ public class UserService {
     AuraConfig config;
     AuraDatabase database;
     UserRepository userRepository;
-    DiscordService discordService;
+    DiscordIRC discordIRC;
 
 
     @SneakyThrows
@@ -206,7 +206,7 @@ public class UserService {
     }
 
     public @Nullable Member getGuildMember(AuraUser user) {
-        Guild guild = discordService.getDefaultGuild();
+        Guild guild = discordIRC.getDefaultGuild();
         if (user.getDiscordId() == null || guild == null)
             return null;
         try {
@@ -217,7 +217,7 @@ public class UserService {
     }
 
     public boolean isStreamer(AuraUser user) {
-        Role role = discordService.getRoles().get("streamer");
+        Role role = discordIRC.getRoles().get("streamer");
         if (role != null) {
             Member member = getGuildMember(user);
             if (member != null) {
@@ -230,7 +230,7 @@ public class UserService {
     public @Nullable net.dv8tion.jda.api.entities.User getDiscordUser(AuraUser user) {
         try {
             if (user.getDiscordId() != null) {
-                return discordService.getJda().retrieveUserById(user.getDiscordId()).complete();
+                return discordIRC.getJda().retrieveUserById(user.getDiscordId()).complete();
             }
         } catch (Exception ignored) {
         }
@@ -293,7 +293,7 @@ public class UserService {
         }
 
         try {
-            discordService.getDefaultGuild().addRoleToMember(discordUser, discordService.getRoles().get("twitch")).queue();
+            discordIRC.getDefaultGuild().addRoleToMember(discordUser, discordIRC.getRoles().get("twitch")).queue();
         } catch (Exception ignored) {
         }
         return user;

@@ -1,4 +1,4 @@
-package net.aniby.aura.service;
+package net.aniby.aura.service.rest;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
@@ -7,8 +7,9 @@ import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
-import net.aniby.aura.twitch.TwitchIRC;
-import net.aniby.aura.twitch.TwitchLinkState;
+import net.aniby.aura.service.user.UserService;
+import net.aniby.aura.service.twitch.TwitchIRC;
+import net.aniby.aura.service.twitch.TwitchLinkState;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class LinkService {
+public class LinkRest {
     UserService userService;
     TwitchIRC twitchIRC;
     AuraConfig config;
