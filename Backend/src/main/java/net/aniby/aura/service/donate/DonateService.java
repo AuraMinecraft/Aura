@@ -14,6 +14,7 @@ import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.service.discord.DiscordLogger;
 import net.aniby.aura.tool.AuraCache;
 import net.aniby.yoomoney.client.YooMoneyClient;
+import net.aniby.yoomoney.modules.forms.QuickPay;
 import net.aniby.yoomoney.modules.notifications.IncomingNotification;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
@@ -34,6 +35,8 @@ public class DonateService {
 
     @Getter
     YooMoneyClient client;
+    @Getter
+    String yooMoneyAccountNumber;
     String notificationSecret;
 
     UserRepository userRepository;
@@ -56,6 +59,7 @@ public class DonateService {
                 node.getNode("client_id").getString(),
                 node.getNode("access_token").getString()
         );
+        this.yooMoneyAccountNumber = this.client.getAccountInfo().getAccount();
 
         this.yooMoneyCache = yooMoneyCache;
         this.yooMoneyCache.load();
@@ -113,16 +117,17 @@ public class DonateService {
         return donate;
     }
 
-    public String createURL(String discordId, double amount) throws IOException {
-        String label = "discord:" + discordId;
-        System.out.println(client);
-        return client.createQuickPayForm(amount, label);
-    }
-
     public void processRest(HttpServletResponse response, String method, String discord, double amount) throws IOException {
         switch (method) {
             case "yoomoney":
-                String url = client.createQuickPayForm(amount, "discord:" + discord);
+                String url = client.createQuickPayForm(
+                        new QuickPay(
+                                this.yooMoneyAccountNumber,
+                                amount,
+                                QuickPay.PAYMENT_TYPES,
+                                "discord:" + discord
+                        )
+                );
                 response.sendRedirect(url);
                 return;
         }
