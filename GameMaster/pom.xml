@@ -30,8 +30,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>16</source>
+                    <target>16</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -76,6 +76,7 @@
             <groupId>net.aniby.aura</groupId>
             <artifactId>API</artifactId>
             <version>0.1</version>
+            <scope>compile</scope>
         </dependency>
         <!-- Aikar & Kyori & Paper -->
         <dependency>
@@ -94,11 +95,13 @@
             <artifactId>acf-paper</artifactId>
             <version>0.5.1-SNAPSHOT</version>
         </dependency>
+        <!-- Custom -->
         <dependency>
-            <groupId>net.aniby.aura</groupId>
-            <artifactId>API</artifactId>
-            <version>0.1</version>
-            <scope>compile</scope>
+            <groupId>org.inventivetalent</groupId>
+            <artifactId>glow</artifactId>
+            <version>v1.5.7-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>D:/Programming/Libraries/GlowAPI_v1.5.7-SNAPSHOT.jar</systemPath>
         </dependency>
     </dependencies>
 </project>

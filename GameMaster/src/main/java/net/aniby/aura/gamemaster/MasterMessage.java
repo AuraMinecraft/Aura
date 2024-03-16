@@ -5,17 +5,32 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Objects;
 
 @Getter
-@AllArgsConstructor
-@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-public class MasterMessage {
-    @Getter
+public record MasterMessage(Date date, String sender, String receiver, Component component) {
     static final ArrayList<MasterMessage> messages = new ArrayList<>();
 
-    final String sender;
-    final String receiver;
-    final Component message;
+    public static void addMessage(MasterMessage masterMessage) {
+        messages.add(masterMessage);
+    }
+
+    public static ArrayList<MasterMessage> getMessages(@NotNull String receiver, int page) {
+        ArrayList<MasterMessage> receivedMessages = new ArrayList<>();
+        int messagesPerPage = GameMaster.getInstance().getConfig().getInt("list.messages_per_page", 10);
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            MasterMessage message = messages.get(i);
+            if (Objects.equals(receiver, message.receiver)) {
+                receivedMessages.add(message);
+                if (receivedMessages.size() == messagesPerPage)
+                    break;
+            }
+        }
+        return receivedMessages;
+    }
+
 }

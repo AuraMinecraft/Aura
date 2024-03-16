@@ -16,6 +16,14 @@ public class UserRepository {
     AuraDatabase database;
 
     @SneakyThrows
+    public AuraUser findWithPlayerName(String playerName) {
+        return database.getUsers().queryBuilder()
+                .where()
+                .eq("player_name", playerName)
+                .queryForFirst();
+    }
+
+    @SneakyThrows
     public int delete(AuraUser user) {
         return database.getUsers().delete(user);
     }

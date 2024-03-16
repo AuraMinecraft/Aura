@@ -6,3 +6,5 @@ load: STARTUP
 authors: [ An1by ]
 description: Utils for Game Master and events
 website: https://aura.aniby.net
+softdepend:
+  - GlowAPI
