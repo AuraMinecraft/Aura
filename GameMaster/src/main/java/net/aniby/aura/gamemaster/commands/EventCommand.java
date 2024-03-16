@@ -7,7 +7,6 @@ import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.gamemaster.EventQueue;
 import net.aniby.aura.gamemaster.GameMaster;
 import net.aniby.aura.gamemaster.MasterMessage;
-import net.aniby.aura.repository.UserRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
@@ -31,7 +30,7 @@ public class EventCommand extends BaseCommand {
 
         switch (answer) {
             case "accept" -> {
-                AuraUser user = GameMaster.getUserRepository().findWithPlayerName(name);
+                AuraUser user = GameMaster.getUserRepository().findByPlayerName(name);
                 if (user == null) {
                     sender.sendMessage(
                             GameMaster.getMessage("database_error")

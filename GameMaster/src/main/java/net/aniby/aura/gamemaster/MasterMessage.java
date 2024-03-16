@@ -1,9 +1,5 @@
 package net.aniby.aura.gamemaster;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.experimental.FieldDefaults;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
-@Getter
 public record MasterMessage(Date date, String sender, String receiver, Component component) {
     static final ArrayList<MasterMessage> messages = new ArrayList<>();
 

@@ -3,7 +3,9 @@ package net.aniby.aura.configuration;
 import lombok.AccessLevel;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
+import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
+import net.aniby.aura.tool.AuraUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -17,6 +19,8 @@ public class ConfigConfiguration {
     @SneakyThrows
     @Scope("singleton")
     public AuraConfig createConfig() {
-        return new AuraConfig(new File("config.yml"));
+        File file = new File("config.yml");
+        AuraUtils.saveDefaultFile(file, "config.yml", AuraBackend.class);
+        return new AuraConfig(file);
     }
 }

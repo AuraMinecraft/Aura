@@ -16,7 +16,7 @@ public class UserRepository {
     AuraDatabase database;
 
     @SneakyThrows
-    public AuraUser findWithPlayerName(String playerName) {
+    public AuraUser findByPlayerName(String playerName) {
         return database.getUsers().queryBuilder()
                 .where()
                 .eq("player_name", playerName)
