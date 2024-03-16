@@ -258,6 +258,16 @@ public class UserService {
             user = new AuraUser();
             user.setTwitchId(twitchUser.getId());
         }
+        AuraUser dbDiscordUser = database.getUsers().queryBuilder()
+                .where()
+                .eq("discord_id", discordId)
+                .queryForFirst();
+        if (dbDiscordUser != null) {
+            user.setAura(user.getAura() + dbDiscordUser.getAura());
+            if (dbDiscordUser.getPlayerName() != null)
+                user.setPlayerName(dbDiscordUser.getPlayerName());
+            userRepository.delete(dbDiscordUser);
+        }
         user.setTwitchName(twitchUser.getDisplayName());
         user.setRefreshToken(refreshToken);
         user.setDiscordId(discordId);

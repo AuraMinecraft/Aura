@@ -42,7 +42,7 @@ public class LinkRest {
     public void twitch(HttpServletResponse response, String code, String uuid) throws URISyntaxException, IOException, InterruptedException, ParseException {
         String discordId = TwitchLinkState.getByUUID(uuid);
         if (discordId == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Link State not found");
 
         Map.Entry<String, Map<String, String>> entry = twitchIRC.generateOAuthTokenRequest(code);
         String url = entry.getKey();
@@ -62,7 +62,7 @@ public class LinkRest {
                     (String) object.get("refresh_token")
             );
             if (streamer == null)
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Discord User not found");
 
             twitchIRC.registerStreamer(streamer);
 
@@ -70,6 +70,6 @@ public class LinkRest {
             response.sendRedirect(redirectURL);
             return;
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No tokens");
     }
 }
