@@ -49,7 +49,7 @@ public class DonateCommand implements ACommand {
 
         String discordId = user.getId();
         AuraUser auraUser = userService.getByWith("discord_id", discordId);
-        if (auraUser == null || auraUser.getRefreshToken() == null) {
+        if (auraUser == null || auraUser.getTwitchId() == null) {
             event.getHook().editOriginal(config.getMessage("need_linked_twitch")).queue();
             return;
         }
