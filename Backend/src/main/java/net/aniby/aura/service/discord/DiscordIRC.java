@@ -1,8 +1,11 @@
-package net.aniby.aura.discord;
+package net.aniby.aura.service.discord;
 
+import lombok.AccessLevel;
 import lombok.Getter;
-import net.aniby.aura.AuraBackend;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
+import net.aniby.aura.discord.CommandHandler;
+import net.aniby.aura.service.discord.commands.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -15,31 +18,68 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-@Getter
+@Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class DiscordIRC extends ListenerAdapter {
-    final JDA jda;
-    Guild defaultGuild = null;
-    final HashMap<String, Role> roles = new HashMap<>();
-    final HashMap<String, TextChannel> channels = new HashMap<>();
-    DiscordLogger logger = null;
+    AuraConfig config;
+    DiscordForm discordForm;
 
-    public DiscordIRC() {
-        ConfigurationNode node = AuraBackend.getConfig().getRoot().getNode("discord");
+    @Getter
+    final CommandHandler handler;
+
+    @Getter
+    final JDA jda;
+    @Getter
+    Guild defaultGuild = null;
+    @Getter
+    final HashMap<String, Role> roles = new HashMap<>();
+    @Getter
+    final HashMap<String, TextChannel> channels = new HashMap<>();
+
+    public DiscordIRC(AuraConfig config, DiscordListener discordListener, DiscordForm discordForm,
+                      AuraCommand auraCommand,
+                      LinkCommand linkCommand,
+                      ForceLinkCommand forceLinkCommand,
+                      UnlinkCommand unlinkCommand,
+                      AuraLinkCommand auraLinkCommand,
+                      ProfileCommand profileCommand,
+                      DonateCommand donateCommand) {
+        this.config = config;
+        this.discordForm = discordForm;
+
+        ConfigurationNode node = config.getRoot().getNode("discord");
         this.jda = JDABuilder.createDefault(
-                node.getNode("bot_token").getString()
-        ).setActivity(Activity.of(Activity.ActivityType.STREAMING, "aura.aniby.net"))
-                .addEventListeners(new DiscordListener(), this)
+                        node.getNode("bot_token").getString()
+                ).setActivity(Activity.of(Activity.ActivityType.STREAMING, "aura.aniby.net"))
+                .addEventListeners(discordListener, this)
                 .build();
+
+        this.handler = new CommandHandler(this.getJda());
+        this.handler.registerCommands(
+                auraCommand,
+                linkCommand,
+                forceLinkCommand,
+                unlinkCommand,
+                auraLinkCommand,
+                profileCommand,
+                donateCommand
+        );
+        handler.confirm();
+        handler.registerButton(discordForm.FORM_CREATE, discordForm::buttonFormCreate);
+        handler.registerModal(discordForm.FORM_SUBMIT, discordForm::modalFormSubmit);
+        handler.registerButton(discordForm.FORM_ACCEPT, discordForm::buttonFormAccept);
+        handler.registerButton(discordForm.FORM_DECLINE, discordForm::buttonFormDecline);
     }
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        ConfigurationNode root = AuraBackend.getConfig().getRoot();
+        ConfigurationNode root = config.getRoot();
         ConfigurationNode node = root.getNode("discord");
 
         // Guild
@@ -61,10 +101,9 @@ public class DiscordIRC extends ListenerAdapter {
                     channelsNode.getNode(channelName).getString()
             ));
         }
-        logger = new DiscordLogger();
 
         // Start messages
-        TextChannel startFormsChannel = channels.get("start_forms");
+        TextChannel startFormsChannel = this.getChannels().get("start_forms");
         boolean clear = true;
         try {
             MessageHistory history = new MessageHistory(startFormsChannel);
@@ -77,14 +116,13 @@ public class DiscordIRC extends ListenerAdapter {
                             a -> {
                                 List<Button> buttons = a.getButtons();
                                 if (!buttons.isEmpty()) {
-                                    return buttons.stream().filter(b -> Objects.equals(b.getId(), JoinForm.FORM_CREATE))
+                                    return buttons.stream().filter(b -> Objects.equals(b.getId(), discordForm.FORM_CREATE))
                                             .findFirst().orElse(null) != null;
                                 }
                                 return false;
                             }
                     ).findFirst().orElse(null);
                     if (row != null) {
-                        AuraBackend.getLogger().info("Founded start message for creating form");
                         clear = false;
                     }
                 }
@@ -93,20 +131,14 @@ public class DiscordIRC extends ListenerAdapter {
                     startFormsChannel.deleteMessages(msgs).queue();
             }
         } catch (Exception exception) {
-            AuraBackend.getLogger().info(
-                    "\u001B[31mMessages in form channel can't be deleted! Delete it yourself!\u001B[37m"
-            );
         }
         if (clear) {
-            ConfigurationNode formNode = root.getNode("form");
+            ConfigurationNode formNode = config.getRoot().getNode("form");
 
-            MessageEmbed embed = EmbedBuilder.fromData(
-                    DataObject.fromJson(
-                            formNode.getNode("start_embed").getString()
-                    )
-            ).build();
-            startFormsChannel.sendMessageEmbeds(embed).addActionRow(
-                    Button.primary(JoinForm.FORM_CREATE, formNode.getNode("button_label").getString())
+            startFormsChannel.sendMessageEmbeds(
+                    config.getEmbed("form_start")
+            ).addActionRow(
+                    Button.primary(discordForm.FORM_CREATE, formNode.getNode("button_label").getString())
             ).queue();
         }
     }

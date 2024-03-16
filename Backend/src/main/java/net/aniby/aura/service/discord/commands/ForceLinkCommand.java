@@ -1,10 +1,12 @@
-package net.aniby.aura.discord.commands;
+package net.aniby.aura.service.discord.commands;
 
-import net.aniby.aura.AuraBackend;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.BackendTools;
 import net.aniby.aura.discord.ACommand;
-import net.aniby.aura.modules.AuraUser;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.discord.DiscordIRC;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -17,11 +19,27 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Locale;
 
+@Service
+@FieldDefaults(makeFinal = true)
 public class ForceLinkCommand implements ACommand {
+    AuraConfig config;
+    UserService userService;
+    UserRepository userRepository;
+    DiscordIRC discordIRC;
+
+    public ForceLinkCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordIRC discordIRC) {
+        this.config = config;
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.discordIRC = discordIRC;
+    }
+
     public boolean hasPermission(SlashCommandInteractionEvent event) {
         // Init variables
         User source = event.getUser();
@@ -32,7 +50,7 @@ public class ForceLinkCommand implements ACommand {
         }
 
         // Check in guild
-        Guild guild = AuraBackend.getDiscord().getDefaultGuild();
+        Guild guild = discordIRC.getDefaultGuild();
         Member member;
         try {
             member = guild.retrieveMember(source).complete();
@@ -48,7 +66,6 @@ public class ForceLinkCommand implements ACommand {
         event.deferReply(true).queue();
 
         User source = event.getUser();
-        AuraConfig config = AuraBackend.getConfig();
 
         if (!hasPermission(event)) {
             event.getHook().editOriginal(
@@ -61,7 +78,7 @@ public class ForceLinkCommand implements ACommand {
                 social = event.getOption("social").getAsString(),
                 value = event.getOption("value").getAsString();
 
-        AuraUser user = BackendTools.extractBySocialSelector(identifier);
+        AuraUser user = userService.extractBySocialSelector(identifier);
 
         if (user == null) {
             event.getHook().editOriginal(config.getMessage("user_not_found"))
@@ -72,18 +89,18 @@ public class ForceLinkCommand implements ACommand {
         switch (social) {
             case "minecraft" -> {
                 user.setPlayerName(value);
-                user.save();
+                userRepository.update(user);
             }
             case "discord" -> {
                 user.setDiscordId(value);
-                user.save();
+                userRepository.update(user);
             }
         }
 
         social = social.toLowerCase(Locale.ROOT);
         String formattedSocial = social.substring(0, 1).toUpperCase() + social.substring(1);
 
-        List<Replacer> tags = user.getReplacers();
+        List<Replacer> tags = userService.getReplacers(user);
         tags.addAll(List.of(
                 Replacer.r("social", formattedSocial),
                 Replacer.r("admin_name", source.getName())

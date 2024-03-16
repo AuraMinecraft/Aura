@@ -1,10 +1,12 @@
-package net.aniby.aura.discord.commands;
+package net.aniby.aura.service.discord.commands;
 
-import net.aniby.aura.AuraBackend;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.BackendTools;
 import net.aniby.aura.discord.ACommand;
-import net.aniby.aura.modules.AuraUser;
+import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.discord.DiscordIRC;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
@@ -16,31 +18,45 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
+@FieldDefaults(makeFinal = true)
 public class ProfileCommand implements ACommand {
+    AuraConfig config;
+    UserService userService;
+    UserRepository userRepository;
+    DiscordIRC discordIRC;
+
+    public ProfileCommand(AuraConfig config, @Lazy UserService userService, UserRepository userRepository, @Lazy DiscordIRC discordIRC) {
+        this.config = config;
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.discordIRC = discordIRC;
+    }
+
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
-
-        AuraConfig config = AuraBackend.getConfig();
 
         if (!hasPermission(event))
             return;
 
         String identifier = event.getOption("identifier").getAsString();
-        AuraUser user = BackendTools.extractBySocialSelector(identifier);
+        AuraUser user = userService.extractBySocialSelector(identifier);
         if (user == null) {
             event.getHook().editOriginal(config.getMessage("user_not_found"))
                     .queue();
             return;
         }
 
-        String selectorName = BackendTools.extractNameBySocialSelector(identifier);
+        String selectorName = userService.extractNameBySocialSelector(identifier);
 
         assert selectorName != null;
-        List<Replacer> resolvers = user.getReplacers();
+        List<Replacer> resolvers = userService.getReplacers(user);
         resolvers.add(Replacer.r("selector_name", selectorName));
 
         String subcommandName = event.getSubcommandName();
@@ -64,7 +80,7 @@ public class ProfileCommand implements ACommand {
                             return;
                         }
 
-                        if (AuraUser.getByWith("player_name", newName) != null) {
+                        if (userService.getByWith("player_name", newName) != null) {
                             event.getHook().editOriginal(config.getMessage("user_already_exists")).queue();
                             return;
                         }
@@ -79,7 +95,7 @@ public class ProfileCommand implements ACommand {
 
                 boolean newValue = !user.isWhitelisted();
                 user.setWhitelisted(newValue);
-                user.save();
+                userRepository.update(user);
 
                 event.getHook()
                         .editOriginal(config.getMessage(
@@ -113,7 +129,6 @@ public class ProfileCommand implements ACommand {
 
     public boolean hasPermission(SlashCommandInteractionEvent event) {
         // Is bot
-        AuraConfig config = AuraBackend.getConfig();
         User user = event.getUser();
         if (user.isBot()) {
             event.getHook().editOriginal(config.getMessage("invalid_executor")).queue();
@@ -122,7 +137,7 @@ public class ProfileCommand implements ACommand {
 
         // Check in guild
         try {
-            AuraBackend.getDiscord().getDefaultGuild().retrieveMember(user).complete();
+            discordIRC.getDefaultGuild().retrieveMember(user).complete();
         } catch (ErrorResponseException exception) {
             event.getHook().editOriginal(
                     config.getMessage("not_in_guild")

@@ -26,6 +26,7 @@ public class AuraConfig {
 
     public AuraConfig(File file) throws IOException {
         this.loader = YAMLConfigurationLoader.builder().setPath(file.toPath()).build();
+        System.out.println(file.getAbsolutePath());
         load();
     }
 
@@ -55,12 +56,19 @@ public class AuraConfig {
         return getMessage(name, Arrays.stream(replaces).toList());
     }
 
+    public MessageEmbed getEmbed(ConfigurationNode node, @NotNull Replacer... replaces) {
+        return getEmbed(node, Arrays.stream(replaces).toList());
+    }
+
     public MessageEmbed getEmbed(String name, @NotNull Replacer... replaces) {
-        return getEmbed(name, Arrays.stream(replaces).toList());
+        return getEmbed(this.root.getNode("embeds", name), Arrays.stream(replaces).toList());
     }
 
     public MessageEmbed getEmbed(String name, @NotNull List<Replacer> replaces) {
-        ConfigurationNode node = this.root.getNode("embeds", name);
+        return getEmbed(this.root.getNode("embeds", name), replaces);
+    }
+
+    public MessageEmbed getEmbed(ConfigurationNode node, @NotNull List<Replacer> replaces) {
         EmbedBuilder builder = new EmbedBuilder();
 
         builder = builder.setTitle(replaceMessage(node.getNode("title").getString(null), replaces));

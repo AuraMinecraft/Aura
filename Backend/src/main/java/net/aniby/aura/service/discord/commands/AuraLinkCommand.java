@@ -1,8 +1,9 @@
-package net.aniby.aura.discord.commands;
+package net.aniby.aura.service.discord.commands;
 
-import net.aniby.aura.AuraBackend;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.discord.ACommand;
+import net.aniby.aura.service.discord.DiscordIRC;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -16,16 +17,28 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
+@Service
+@FieldDefaults(makeFinal = true)
 public class AuraLinkCommand implements ACommand {
+    AuraConfig config;
+    DiscordIRC discordIRC;
+
+    public AuraLinkCommand(AuraConfig config, @Lazy DiscordIRC discordIRC) {
+        this.config = config;
+        this.discordIRC = discordIRC;
+    }
+
     public void execute(@Nullable String argument) {
         try {
             if (argument != null) {
                 switch (argument) {
-                    case "config" -> AuraBackend.getConfig().load();
+                    case "config" -> config.load();
                 }
             } else {
-                AuraBackend.getConfig().load();
+                config.load();
             }
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -42,7 +55,7 @@ public class AuraLinkCommand implements ACommand {
         }
 
         // Check in guild
-        Guild guild = AuraBackend.getDiscord().getDefaultGuild();
+        Guild guild = discordIRC.getDefaultGuild();
         Member member;
         try {
             member = guild.retrieveMember(source).complete();
@@ -59,8 +72,6 @@ public class AuraLinkCommand implements ACommand {
         event.deferReply(true).queue();
 
         User source = event.getUser();
-        AuraConfig config = AuraBackend.getConfig();
-
         if (!hasPermission(event)) {
             event.getHook().editOriginal(
                     config.getMessage("no_permission")

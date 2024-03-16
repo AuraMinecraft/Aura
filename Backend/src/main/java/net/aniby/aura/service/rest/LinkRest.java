@@ -1,4 +1,4 @@
-package net.aniby.aura.service;
+package net.aniby.aura.service.rest;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
@@ -7,9 +7,9 @@ import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
-import net.aniby.aura.repository.UserRepository;
-import net.aniby.aura.twitch.TwitchBot;
-import net.aniby.aura.twitch.TwitchLinkState;
+import net.aniby.aura.service.user.UserService;
+import net.aniby.aura.service.twitch.TwitchIRC;
+import net.aniby.aura.service.twitch.TwitchLinkState;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +24,9 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class LinkService {
-    UserRepository userRepository;
+public class LinkRest {
     UserService userService;
-    TwitchBot twitchBot;
+    TwitchIRC twitchIRC;
     AuraConfig config;
 
 
@@ -36,7 +35,7 @@ public class LinkService {
         if (state == null || !state.getDiscordId().equals(id))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-        String url = twitchBot.generateOAuthCodeRequest(state.getUuid());
+        String url = twitchIRC.generateOAuthCodeRequest(state.getUuid());
         response.sendRedirect(url);
     }
 
@@ -45,7 +44,7 @@ public class LinkService {
         if (discordId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-        Map.Entry<String, Map<String, String>> entry = twitchBot.generateOAuthTokenRequest(code);
+        Map.Entry<String, Map<String, String>> entry = twitchIRC.generateOAuthTokenRequest(code);
         String url = entry.getKey();
         Map<String, String> body = entry.getValue();
 
@@ -57,6 +56,7 @@ public class LinkService {
 
         if (object.containsKey("access_token") && object.containsKey("refresh_token")) {
             AuraUser streamer = userService.fromRequestData(
+                    twitchIRC,
                     discordId,
                     (String) object.get("access_token"),
                     (String) object.get("refresh_token")
@@ -64,7 +64,7 @@ public class LinkService {
             if (streamer == null)
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
-            twitchBot.registerStreamer(streamer);
+            twitchIRC.registerStreamer(streamer);
 
             String redirectURL = config.getRoot().getNode("discord", "invite_url").getString();
             response.sendRedirect(redirectURL);

@@ -11,7 +11,6 @@ aura:
 
 donation:
   yoomoney:
-    redirect_uri: "https://api.aniby.net/donate"
     access_token: ""
     client_id: ""
     client_secret: ""
@@ -29,15 +28,8 @@ donation:
     KZT: 0.15
     UAH: 2.1
 
-socket:
-  secret_key: "0m3G@_S3cr3t_K&y!"
-  port: 3089
-
 http_server:
-  hostname: "0.0.0.0"
-  port: 23160
-  threads: 2
-  external_url: "http://localhost:23160"
+  external_url: "http://localhost:23160/"
 
 mysql:
   url: ""
@@ -65,8 +57,6 @@ twitch:
     client_secret: ""
 
 form:
-  log_embed: '{"title": "Новая заявка!", "description": "Заполнял - <@<discord_id>>", "fields":[{"name": "<field_nickname_label>", "value": "<field_nickname_value>", "inline": false}, {"name": "<field_age_label>", "value": "<field_age_value>", "inline": false}]}'
-  start_embed: '{"title":"Заполните заявку!","color":null,"description":"Типа что-то,\nчто нам нужно"}'
   button_label: "Оставить заявку"
   modal:
     label: "Анкета"
@@ -83,10 +73,23 @@ form:
         required: false
 
 embeds:
+  form_start:
+    title: "📝 Анкеты"
+    color: 10180863
+    description: "Заполнив анкету, у вас появляется возможность получить доступ к серверу.\nВашу заявку на сервер могут отклонить, если она не будет содержать достаточно развернутых ответов на поставленные вопросы.\n\nЕсли вашу заявку отклонили, то для того, чтобы заполнить ее заново, потребуется подождать решения администрация для очистки базы неодобренных анкет.\n\n> Для заполнения анкеты нажмите на кнопку ниже.\n> *Если у вас закрыты личные сообщение для бота, то он не сможет оповестить вас об итогах проверки заявки!*"
+  form_log:
+    title: "Новая заявка"
+    description: "<field_nickname_value> | <discord_mention> | https://twitch.tv/<twitch_name>"
+    color: 10180863
+    fields:
+      - name: "<filed_age_label>"
+        value: "<field_age_value>"
   go_live:
     title: "<stream_title>"
     url: "<twitch_url>"
     color: 10180863
+    image:
+      url: "<stream_thumbnail>"
     author:
       name: "<twitch_name>"
       url: "<twitch_url>"

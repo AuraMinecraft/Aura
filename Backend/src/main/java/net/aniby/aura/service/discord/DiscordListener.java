@@ -1,8 +1,9 @@
-package net.aniby.aura.discord;
+package net.aniby.aura.service.discord;
 
-import net.aniby.aura.AuraBackend;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.entity.AuraUser;
-import net.aniby.aura.service.UserService;
+import net.aniby.aura.service.user.UserService;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
@@ -12,30 +13,46 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
+@Service
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DiscordListener extends ListenerAdapter {
-    @Autowired
+    Logger logger = LoggerFactory.getLogger(DiscordListener.class);
+
     UserService userService;
+    DiscordIRC discordIRC;
+
+    public DiscordListener(
+            @Lazy UserService userService,
+            @Lazy DiscordIRC discordIRC
+            ) {
+        this.userService = userService;
+        this.discordIRC = discordIRC;
+    }
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        AuraBackend.getHandler().executeDiscord(event);
+        discordIRC.getHandler().executeDiscord(event);
     }
+
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        AuraBackend.getHandler().executeButton(event);
+        discordIRC.getHandler().executeButton(event);
     }
 
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
-        AuraBackend.getHandler().executeModal(event);
+        discordIRC.getHandler().executeModal(event);
     }
 
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         Guild guild = event.getGuild();
-        if (!guild.equals(AuraBackend.getDiscord().getDefaultGuild()))
+        if (!guild.equals(discordIRC.getDefaultGuild()))
             return;
 
         User user = event.getUser();
@@ -47,9 +64,9 @@ public class DiscordListener extends ListenerAdapter {
         try {
             member.modifyNickname(auraUser.getPlayerName()).queue();
             if (auraUser.getTwitchId() != null)
-                guild.addRoleToMember(user, AuraBackend.getDiscord().getRoles().get("twitch")).queue();
+                guild.addRoleToMember(user, discordIRC.getRoles().get("twitch")).queue();
         } catch (Exception exception) {
-            AuraBackend.getLogger().info(
+            logger.info(
                     "Can't modify guild member. User: @" + event.getUser().getName() + ", nickname: " + auraUser.getPlayerName()
             );
         }

@@ -26,11 +26,11 @@ public final class GameMaster extends JavaPlugin {
         FileConfiguration config = getConfig();
 
         ConfigurationSection dbSection = config.getConfigurationSection("mysql");
-        AuraAPI.init(
-                dbSection.getString("url"),
-                dbSection.getString("login"),
-                dbSection.getString("password")
-        );
+//        AuraAPI.init(
+//                dbSection.getString("url"),
+//                dbSection.getString("login"),
+//                dbSection.getString("password")
+//        );
 
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.registerCommand(new EventMessageCommand());

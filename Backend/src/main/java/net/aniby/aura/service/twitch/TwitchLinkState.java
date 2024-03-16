@@ -1,4 +1,4 @@
-package net.aniby.aura.twitch;
+package net.aniby.aura.service.twitch;
 
 import lombok.Getter;
 import net.aniby.aura.tool.AuraUtils;

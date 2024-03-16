@@ -1,30 +1,40 @@
-package net.aniby.aura.discord;
+package net.aniby.aura.service.discord;
 
-import net.aniby.aura.AuraBackend;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.AuraConfig;
 import net.aniby.aura.entity.AuraDonate;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.DonateRepository;
-import net.aniby.aura.service.UserService;
+import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.AuraUtils;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DiscordLogger {
-    @Autowired
     AuraConfig config;
-    @Autowired
     UserService userService;
-    @Autowired
     DonateRepository donateRepository;
+    DiscordIRC discordIRC;
+
+    public DiscordLogger(AuraConfig config, @Lazy UserService userService, DonateRepository donateRepository, @Lazy DiscordIRC discordIRC) {
+        this.config = config;
+
+        this.userService = userService;
+        this.donateRepository = donateRepository;
+        this.discordIRC = discordIRC;
+    }
 
     TextChannel getChannel() {
-        return AuraBackend.getDiscord().channels.get("logs");
+        return discordIRC.getChannels().get("logs");
     }
 
     public void viewerEarnedAura(String displayName, AuraUser user, double amount, String streamerName, double streamerAmount) {

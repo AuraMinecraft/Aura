@@ -1,20 +1,19 @@
-package net.aniby.aura.service;
+package net.aniby.aura.service.user;
 
-import com.github.twitch4j.domain.ChannelCache;
 import com.github.twitch4j.helix.domain.User;
 import com.j256.ormlite.stmt.Where;
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraBackend;
 import net.aniby.aura.AuraConfig;
-import net.aniby.aura.discord.DiscordIRC;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.mysql.AuraDatabase;
 import net.aniby.aura.repository.UserRepository;
+import net.aniby.aura.service.discord.DiscordIRC;
 import net.aniby.aura.tool.Replacer;
-import net.aniby.aura.twitch.AccessData;
-import net.aniby.aura.twitch.TwitchBot;
+import net.aniby.aura.service.twitch.AccessData;
+import net.aniby.aura.service.twitch.TwitchIRC;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -32,26 +31,19 @@ import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 import java.util.*;
 
+import static net.aniby.aura.tool.AuraUtils.onlyDigits;
 import static net.aniby.aura.tool.Replacer.r;
 
 import net.aniby.aura.entity.AuraUser;
 
 @Service
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
     AuraConfig config;
     AuraDatabase database;
     UserRepository userRepository;
-    TwitchBot twitchBot;
-
-    @Autowired
-    @SneakyThrows
-    public UserService(AuraConfig config, TwitchBot twitchBot, AuraDatabase database, UserRepository userRepository) {
-        this.config = config;
-        this.userRepository = userRepository;
-        this.database = database;
-        this.twitchBot = twitchBot;
-    }
+    DiscordIRC discordIRC;
 
 
     @SneakyThrows
@@ -94,9 +86,49 @@ public class UserService {
         return null;
     }
 
-    public void init(AuraUser user) {
-        if (user.getTwitchId() != null)
-            twitchBot.registerStreamer(user);
+    @SneakyThrows
+    public @Nullable String extractNameBySocialSelector(@NotNull String identifier) {
+        AuraUser user;
+        if (identifier.startsWith("tid/") || identifier.startsWith("twitch_id/")) {
+            String twitchId = identifier.split("/", 2)[1];
+            user = getByWith("twitch_id", twitchId);
+            return user != null ? user.getTwitchName() : null;
+        } else if (identifier.startsWith("twitch/") || identifier.startsWith("t/")) {
+            return identifier.split("/", 2)[1];
+        } else if (identifier.startsWith("<@") && identifier.endsWith(">") && identifier.length() >= 20) {
+            String discordId = identifier.substring(2, identifier.length() - 1);
+            user = getByWith("discord_id", discordId);
+            if (user != null) {
+                net.dv8tion.jda.api.entities.User discordUser = getDiscordUser(user);
+                return discordUser != null ? discordUser.getName() : null;
+            }
+            return null;
+        } else if (onlyDigits(identifier) && identifier.length() >= 17) {
+            user = getByWith("discord_id", identifier);
+            if (user != null) {
+                net.dv8tion.jda.api.entities.User discordUser = getDiscordUser(user);
+                return discordUser != null ? discordUser.getName() : null;
+            }
+            return null;
+        }
+        return identifier;
+    }
+
+    public @Nullable AuraUser extractBySocialSelector(@NotNull String identifier) {
+        if (identifier.startsWith("tid/") || identifier.startsWith("twitch_id/")) {
+            String twitchId = identifier.split("/")[1];
+            return getByWith("twitch_id", twitchId);
+//        }
+//        else if (identifier.startsWith("twitch/") || identifier.startsWith("t/")) {
+//            String twitchName = identifier.split("/")[1];
+//            return CAuraUser.getByTwitchName(twitchName);
+        } else if (identifier.startsWith("<@") && identifier.endsWith(">") && identifier.length() >= 20) {
+            String discordId = identifier.replace("<@", "").replace(">", "");
+            return getByWith("discord_id", discordId);
+        } else if (onlyDigits(identifier) && identifier.length() >= 17) {
+            return getByWith("discord_id", identifier);
+        }
+        return getByWith("player_name", identifier);
     }
 
     // Constructors
@@ -141,15 +173,7 @@ public class UserService {
     }
 
     // Twitch Work
-    public boolean updateTwitchName(AuraUser auraUser) {
-        User user = getTwitchUser(auraUser);
-        if (user != null) {
-            auraUser.setTwitchName(user.getDisplayName());
-            userRepository.update(auraUser);
-            return true;
-        }
-        return false;
-    }
+
 
     // Getters
     public List<Replacer> getReplacers(AuraUser user) {
@@ -182,7 +206,7 @@ public class UserService {
     }
 
     public @Nullable Member getGuildMember(AuraUser user) {
-        Guild guild = AuraBackend.getDiscord().getDefaultGuild();
+        Guild guild = discordIRC.getDefaultGuild();
         if (user.getDiscordId() == null || guild == null)
             return null;
         try {
@@ -193,7 +217,7 @@ public class UserService {
     }
 
     public boolean isStreamer(AuraUser user) {
-        Role role = AuraBackend.getDiscord().getRoles().get("streamer");
+        Role role = discordIRC.getRoles().get("streamer");
         if (role != null) {
             Member member = getGuildMember(user);
             if (member != null) {
@@ -203,29 +227,10 @@ public class UserService {
         return false;
     }
 
-    public boolean isStreamingNow(AuraUser user) {
-        return user.getTwitchId() != null && twitchBot.getClient().getClientHelper()
-                .getCachedInformation(user.getTwitchId())
-                .map(ChannelCache::getIsLive).orElse(false);
-    }
-
-    public @Nullable User getTwitchUser(AuraUser user) {
-        try {
-            if (user.getTwitchId() != null)
-                return twitchBot.getClient().getHelix()
-                        .getUsers(null, List.of(user.getTwitchId()), null)
-                        .execute()
-                        .getUsers()
-                        .get(0);
-        } catch (Exception ignored) {
-        }
-        return null;
-    }
-
     public @Nullable net.dv8tion.jda.api.entities.User getDiscordUser(AuraUser user) {
         try {
             if (user.getDiscordId() != null) {
-                return AuraBackend.getDiscord().getJda().retrieveUserById(user.getDiscordId()).complete();
+                return discordIRC.getJda().retrieveUserById(user.getDiscordId()).complete();
             }
         } catch (Exception ignored) {
         }
@@ -238,8 +243,8 @@ public class UserService {
 
     // Static Methods
     @SneakyThrows
-    public AuraUser fromRequestData(@NotNull String discordId, @NotNull String accessToken, @NotNull String refreshToken) {
-        User twitchUser = twitchBot.getClient().getHelix()
+    public AuraUser fromRequestData(TwitchIRC twitchIRC, @NotNull String discordId, @NotNull String accessToken, @NotNull String refreshToken) {
+        User twitchUser = twitchIRC.getClient().getHelix()
                 .getUsers(accessToken, null, null)
                 .execute()
                 .getUsers()
@@ -288,15 +293,14 @@ public class UserService {
         }
 
         try {
-            DiscordIRC irc = AuraBackend.getDiscord();
-            irc.getDefaultGuild().addRoleToMember(discordUser, irc.getRoles().get("twitch")).queue();
+            discordIRC.getDefaultGuild().addRoleToMember(discordUser, discordIRC.getRoles().get("twitch")).queue();
         } catch (Exception ignored) {
         }
         return user;
     }
 
-    public AccessData getAccessData(String refreshToken) throws URISyntaxException, IOException, InterruptedException, ParseException {
-        Map.Entry<String, Map<String, String>> entry = twitchBot.generateRefreshRequest(refreshToken);
+    public AccessData getAccessData(TwitchIRC twitchIRC, String refreshToken) throws URISyntaxException, IOException, InterruptedException, ParseException {
+        Map.Entry<String, Map<String, String>> entry = twitchIRC.generateRefreshRequest(refreshToken);
         HttpResponse<String> response = IOHelper.post(entry.getKey(), entry.getValue());
         JSONObject object = IOHelper.parse(response);
         if (object.containsKey("access_token") && object.containsKey("refresh_token")) {
