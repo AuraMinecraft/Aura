@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.mysql.AuraDatabase;
 import net.aniby.aura.repository.UserRepository;
@@ -177,6 +177,10 @@ public class UserService {
 
     // Getters
     public List<Replacer> getReplacers(AuraUser user) {
+        return getReplacers(user, "");
+    }
+
+    public List<Replacer> getReplacers(AuraUser user, @NotNull String prefix) {
         net.dv8tion.jda.api.entities.User discordUser = this.getDiscordUser(user);
         String username = "";
         if (user.getPlayerName() != null)
@@ -191,17 +195,17 @@ public class UserService {
                 : config.getMessage("twitch_icon_url");
         String promoMention = user.getPromoDiscordId() == null ? "-" : "<@" + user.getPromoDiscordId() + ">";
         return new ArrayList<>(List.of(
-                r("promo_discord_mention", promoMention),
-                r("promo_discord_id", user.getPromoDiscordId() == null ? "-" : user.getPromoDiscordId()),
-                r("discord_mention", discordUser == null ? "-" : discordUser.getAsMention()),
-                r("discord_name", discordUser == null ? "-" : discordUser.getName()),
-                r("discord_id", user.getDiscordId() == null ? "-" : user.getDiscordId()),
-                r("twitch_name", user.getTwitchName() == null ? "-" : user.getTwitchName()),
-                r("twitch_id", user.getTwitchId() == null ? "-" : user.getTwitchId()),
-                r("player_name", user.getPlayerName() == null ? "-" : user.getPlayerName()),
-                r("user_name", username),
-                r("avatar", avatar),
-                r("aura", String.valueOf(user.getFormattedAura()))
+                r(prefix + "promo_discord_mention", promoMention),
+                r(prefix + "promo_discord_id", user.getPromoDiscordId() == null ? "-" : user.getPromoDiscordId()),
+                r(prefix + "discord_mention", discordUser == null ? "-" : discordUser.getAsMention()),
+                r(prefix + "discord_name", discordUser == null ? "-" : discordUser.getName()),
+                r(prefix + "discord_id", user.getDiscordId() == null ? "-" : user.getDiscordId()),
+                r(prefix + "twitch_name", user.getTwitchName() == null ? "-" : user.getTwitchName()),
+                r(prefix + "twitch_id", user.getTwitchId() == null ? "-" : user.getTwitchId()),
+                r(prefix + "player_name", user.getPlayerName() == null ? "-" : user.getPlayerName()),
+                r(prefix + "user_name", username),
+                r(prefix + "avatar", avatar),
+                r(prefix + "aura", String.valueOf(user.getFormattedAura()))
         ));
     }
 

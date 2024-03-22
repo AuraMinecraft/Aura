@@ -6,7 +6,7 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
-import net.aniby.aura.gamemaster.GameMaster;
+import net.aniby.aura.gamemaster.AuraGameMaster;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -18,7 +18,7 @@ public class HighlightCommand extends BaseCommand {
     @Description("Switching target's highlight")
     public void execute(CommandSender sender, OnlinePlayer onlinePlayer, @Optional String colorName) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(GameMaster.getMessage("invalid_executor"));
+            sender.sendMessage(AuraGameMaster.getMessage("invalid_executor"));
             return;
         }
         Player target = onlinePlayer.getPlayer();
@@ -29,12 +29,12 @@ public class HighlightCommand extends BaseCommand {
                 color = GlowAPI.Color.valueOf(colorName);
             }
         } catch (Exception ignored) {
-            sender.sendMessage(GameMaster.getMessage("invalid_arguments"));
+            sender.sendMessage(AuraGameMaster.getMessage("invalid_arguments"));
             return;
         }
         GlowAPI.setGlowing(target, color, player);
         sender.sendMessage(
-                GameMaster.getMessage(
+                AuraGameMaster.getMessage(
                         color == GlowAPI.Color.NONE ? "highlighting_disabled" : "highlighted",
                         Placeholder.unparsed("target", target.getName())
                 )

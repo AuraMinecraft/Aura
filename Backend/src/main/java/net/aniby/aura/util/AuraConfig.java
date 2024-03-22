@@ -1,4 +1,4 @@
-package net.aniby.aura;
+package net.aniby.aura.util;
 
 import com.google.common.reflect.TypeToken;
 import lombok.Getter;
@@ -26,7 +26,6 @@ public class AuraConfig {
 
     public AuraConfig(File file) throws IOException {
         this.loader = YAMLConfigurationLoader.builder().setPath(file.toPath()).build();
-        System.out.println(file.getAbsolutePath());
         load();
     }
 
@@ -73,7 +72,7 @@ public class AuraConfig {
 
         builder = builder.setTitle(replaceMessage(node.getNode("title").getString(null), replaces));
         builder = builder.setUrl(replaceMessage(node.getNode("url").getString(null), replaces));
-        builder = builder.setDescription(replaceMessage(node.getNode("description").getString(""), replaces));
+        builder = builder.setDescription(replaceMessage(node.getNode("value").getString(""), replaces));
         String timestamp = node.getNode("timestamp").getString();
         builder = builder.setTimestamp(timestamp == null ? null : OffsetDateTime.parse(timestamp));
         int color = node.getNode("color").getInt(-1);

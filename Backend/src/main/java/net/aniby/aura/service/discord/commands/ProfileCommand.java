@@ -1,7 +1,7 @@
 package net.aniby.aura.service.discord.commands;
 
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;
@@ -9,9 +9,7 @@ import net.aniby.aura.service.discord.DiscordIRC;
 import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.Replacer;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -42,7 +40,7 @@ public class ProfileCommand implements ACommand {
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
 
-        if (!hasPermission(event))
+        if (!discordIRC.hasDefaultPermission(event))
             return;
 
         String identifier = event.getOption("identifier").getAsString();
@@ -125,25 +123,5 @@ public class ProfileCommand implements ACommand {
                 .addSubcommands(info, whitelist).setDefaultPermissions(DefaultMemberPermissions.enabledFor(
                         Permission.BAN_MEMBERS
                 )).setGuildOnly(true);
-    }
-
-    public boolean hasPermission(SlashCommandInteractionEvent event) {
-        // Is bot
-        User user = event.getUser();
-        if (user.isBot()) {
-            event.getHook().editOriginal(config.getMessage("invalid_executor")).queue();
-            return false;
-        }
-
-        // Check in guild
-        try {
-            discordIRC.getDefaultGuild().retrieveMember(user).complete();
-        } catch (ErrorResponseException exception) {
-            event.getHook().editOriginal(
-                    config.getMessage("not_in_guild")
-            ).queue();
-            return false;
-        }
-        return true;
     }
 }

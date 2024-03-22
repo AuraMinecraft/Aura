@@ -2,25 +2,34 @@ package net.aniby.aura.mysql;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.entity.AuraDonate;
 
 import javax.annotation.Nonnull;
 import java.sql.SQLException;
 
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuraDatabase {
-    private final @Nonnull ConnectionSource connectionSource;
+    final @Nonnull DatabaseConnectionData connectionData;
+    ConnectionSource connectionSource;
     @Getter
-    private final @Nonnull Dao<AuraUser, Integer> users;
+    Dao<AuraUser, Integer> users;
     @Getter
-    private final @Nonnull Dao<AuraDonate, Integer> donates;
+    Dao<AuraDonate, Integer> donates;
 
     public AuraDatabase(String url, String username, String password) throws SQLException {
-        this.connectionSource = new JdbcConnectionSource(url, username, password);
+        this.connectionData = new DatabaseConnectionData(url, username, password);
+        this.connect();
+    }
+
+    public void connect() throws SQLException {
+        this.connectionSource = this.connectionData.connectionSource();
         this.users = DaoManager.createDao(
                 this.connectionSource,
                 AuraUser.class

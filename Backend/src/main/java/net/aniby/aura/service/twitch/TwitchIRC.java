@@ -16,7 +16,7 @@ import com.github.twitch4j.pubsub.events.RedemptionStatusUpdateEvent;
 import com.github.twitch4j.pubsub.events.RewardRedeemedEvent;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.mysql.AuraDatabase;

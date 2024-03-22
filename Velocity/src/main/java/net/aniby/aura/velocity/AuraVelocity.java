@@ -7,9 +7,12 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.mysql.AuraDatabase;
 import net.aniby.aura.repository.UserRepository;
 import net.aniby.aura.tool.AuraUtils;
@@ -21,6 +24,7 @@ import ninja.leaping.configurate.ConfigurationNode;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -33,23 +37,29 @@ import java.util.HashMap;
         authors = {"An1by"}
 )
 @Getter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuraVelocity {
     @Getter
     private static AuraVelocity instance;
 
     @Inject
-    private final Logger logger;
-    private VelocityConfig config;
-    private UserRepository userRepository;
-    private AuraDatabase database;
-    private final ProxyServer server;
-    private final HashMap<String, Long> commandCooldown = new HashMap<>();
+    Logger logger;
+    @Inject
+    @DataDirectory
+    Path pluginDirectory;
+    @Inject
+    ProxyServer server;
+
+    VelocityConfig config;
+    UserRepository userRepository;
+    AuraDatabase database;
+    final HashMap<String, Long> commandCooldown = new HashMap<>();
 
     public boolean checkCooldown(CommandSource source) {
         String sourceName = source.getOrDefault(Identity.NAME, "UNKNOWN");
         if (commandCooldown.containsKey(sourceName)) {
-            long leaved = new Date().getTime() - commandCooldown.get(sourceName);
-            if (leaved > 0) {
+            long leaved = commandCooldown.get(sourceName) -  new Date().getTime();
+            if (leaved <= 0) {
                 commandCooldown.remove(sourceName);
             } else {
                 source.sendMessage(config.getMessage(
@@ -65,20 +75,14 @@ public class AuraVelocity {
         return true;
     }
 
-    @Inject
-    public AuraVelocity(ProxyServer server, Logger logger) {
-        this.server = server;
-        this.logger = logger;
-    }
-
     @Subscribe
     @SneakyThrows
     public void onProxyInitialization(ProxyInitializeEvent event) {
         instance = this;
 
-        File file = new File("config.yml");
+        File file = pluginDirectory.resolve("config.yml").toFile();
         AuraUtils.saveDefaultFile(file, "config.yml", AuraVelocity.class);
-        config = new VelocityConfig(new File("config.yml"));
+        config = new VelocityConfig(file);
 
         ConfigurationNode node = config.getRoot().getNode("mysql");
         database = new AuraDatabase(

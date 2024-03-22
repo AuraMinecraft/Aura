@@ -1,7 +1,7 @@
 package net.aniby.aura.service.discord.commands;
 
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.service.discord.DiscordIRC;

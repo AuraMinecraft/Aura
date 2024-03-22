@@ -3,19 +3,19 @@ package net.aniby.aura.service.discord;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.discord.CommandHandler;
 import net.aniby.aura.service.discord.commands.*;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.utils.data.DataObject;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -44,10 +44,10 @@ public class DiscordIRC extends ListenerAdapter {
 
     public DiscordIRC(AuraConfig config, DiscordListener discordListener, DiscordForm discordForm,
                       AuraCommand auraCommand,
+//                      StatisticCommand statisticCommand,
+                      BuyCommand buyCommand,
                       LinkCommand linkCommand,
-                      ForceLinkCommand forceLinkCommand,
-                      UnlinkCommand unlinkCommand,
-                      AuraLinkCommand auraLinkCommand,
+                      WhitelistCommand whitelistCommand,
                       ProfileCommand profileCommand,
                       DonateCommand donateCommand) {
         this.config = config;
@@ -64,9 +64,9 @@ public class DiscordIRC extends ListenerAdapter {
         this.handler.registerCommands(
                 auraCommand,
                 linkCommand,
-                forceLinkCommand,
-                unlinkCommand,
-                auraLinkCommand,
+//                statisticCommand,
+                buyCommand,
+                whitelistCommand,
                 profileCommand,
                 donateCommand
         );
@@ -141,5 +141,25 @@ public class DiscordIRC extends ListenerAdapter {
                     Button.primary(discordForm.FORM_CREATE, formNode.getNode("button_label").getString())
             ).queue();
         }
+    }
+
+    public boolean hasDefaultPermission(SlashCommandInteractionEvent event) {
+        // Is bot
+        User user = event.getUser();
+        if (user.isBot()) {
+            event.getHook().editOriginal(config.getMessage("invalid_executor")).queue();
+            return false;
+        }
+
+        // Check in guild
+        try {
+            this.getDefaultGuild().retrieveMember(user).complete();
+        } catch (ErrorResponseException exception) {
+            event.getHook().editOriginal(
+                    config.getMessage("not_in_guild")
+            ).queue();
+            return false;
+        }
+        return true;
     }
 }

@@ -5,22 +5,16 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import net.aniby.aura.gamemaster.commands.EventCommand;
 import net.aniby.aura.gamemaster.commands.HighlightCommand;
-import net.aniby.aura.mysql.AuraDatabase;
-import net.aniby.aura.repository.UserRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
+import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class GameMaster extends JavaPlugin {
+public final class AuraGameMaster extends JavaPlugin {
     @Getter
-    private static GameMaster instance;
-    @Getter
-    private static AuraDatabase database;
-    @Getter
-    private static UserRepository userRepository;
+    private static AuraGameMaster instance;
 
     public static Component getMessage(String path, TagResolver... tags) {
         return miniMessage.deserialize(
@@ -32,33 +26,26 @@ public final class GameMaster extends JavaPlugin {
 
     @Getter
     private static final MiniMessage miniMessage = MiniMessage.builder()
-            .tags(TagResolver.standard())
+            .tags(StandardTags.defaults())
             .build();
 
     @Override
     @SneakyThrows
     public void onEnable() {
-        instance = this;
-
         saveDefaultConfig();
-        FileConfiguration config = getConfig();
 
-        ConfigurationSection dbSection = config.getConfigurationSection("mysql");
-        database = new AuraDatabase(
-                dbSection.getString("url"),
-                dbSection.getString("login"),
-                dbSection.getString("password")
-        );
-        userRepository = new UserRepository(database);
+        PluginManager pluginManager = this.getServer().getPluginManager();
+        if (pluginManager.getPlugin("AuraCore") == null) {
+            getLogger().info("AuraCore is needed to start this plugin!");
+            pluginManager.disablePlugin(this);
+            return;
+        }
+
+        instance = this;
 
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.registerCommand(new EventCommand());
-        if (this.getServer().getPluginManager().getPlugin("GlowAPI") != null)
+        if (pluginManager.getPlugin("GlowAPI") != null)
             manager.registerCommand(new HighlightCommand());
-    }
-
-    @Override
-    public void onDisable() {
-        database.disconnect();
     }
 }

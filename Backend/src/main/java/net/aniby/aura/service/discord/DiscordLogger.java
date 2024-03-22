@@ -2,7 +2,7 @@ package net.aniby.aura.service.discord;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.entity.AuraDonate;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.DonateRepository;

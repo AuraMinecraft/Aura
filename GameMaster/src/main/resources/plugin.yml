@@ -1,10 +1,14 @@
-name: GameMaster
+name: AuraGameMaster
 version: '${project.version}'
-main: net.aniby.aura.gamemaster.GameMaster
+main: net.aniby.aura.gamemaster.AuraGameMaster
 api-version: '1.20'
-load: STARTUP
+load: POSTWORLD
 authors: [ An1by ]
 description: Utils for Game Master and events
 website: https://aura.aniby.net
+
+depend:
+  - AuraCore
+
 softdepend:
   - GlowAPI

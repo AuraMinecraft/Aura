@@ -18,6 +18,7 @@ public class AuraUtils {
 
     static String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
     static Random rnd = new Random();
+
     public static String getRandomString(int size) {
         StringBuilder salt = new StringBuilder();
         while (salt.length() < size) { // length of the random string.

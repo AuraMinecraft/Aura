@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.aniby.aura.tool.AuraUtils;
 
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.Map;
+
 @Getter
 @Setter
 @DatabaseTable(tableName = "users")
@@ -43,5 +47,10 @@ public class AuraUser {
 
     public double getFormattedAura() {
         return AuraUtils.roundDouble(aura);
+    }
+
+    public static Comparator<AuraUser> comparingByAura() {
+        return (Comparator<AuraUser> & Serializable)
+                (c1, c2) -> Double.compare(c1.getAura(), c2.getAura());
     }
 }

@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.entity.AuraDonate;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.DonateRepository;
@@ -71,9 +71,6 @@ public class DonateService {
     public void processNotification(Map<String, String> body) throws IllegalAccessException, IOException {
         IncomingNotification notification = IncomingNotification.get(body);
 
-        if (!yooMoneyCache.cache(notification.operationId))
-            return;
-
         if (notification.isTestNotification())
             return;
         if (!notification.verify(this.notificationSecret))
@@ -83,6 +80,9 @@ public class DonateService {
         if (label == null)
             return;
         if (!label.startsWith("discord:"))
+            return;
+
+        if (!yooMoneyCache.cache(notification.operationId))
             return;
 
         String discordId = label.split(":", 2)[1];

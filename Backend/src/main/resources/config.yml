@@ -56,23 +56,28 @@ twitch:
     client_id: ""
     client_secret: ""
 
-form:
-  button_label: "Оставить заявку"
-  modal:
-    label: "Анкета"
-    questions:
-      nickname: # НЕ МЕНЯТЬ ID НА ЭТОЙ СТРОЧКЕ!
-        position: 1
-        label: "Никнейм"
-        placeholder: "An1by"
-        style: SHORT
-      age:
-        position: 2
-        label: "Возраст"
-        style: PARAGRAPH
-        required: false
-
 embeds:
+  statistic_aura:
+    title: "Статистика по ауре"
+    color: 10180863
+    description: |-
+      **1.** <1s_discord_mention> - <1s_aura>
+      **2.** <2s_discord_mention> - <2s_aura>
+      **3.** <3s_discord_mention> - <3s_aura>
+      **4.** <4s_discord_mention> - <4s_aura>
+      **5.** <5s_discord_mention> - <5s_aura>
+      **6.** <6s_discord_mention> - <6s_aura>
+      **7.** <7s_discord_mention> - <7s_aura>
+      **8.** <8s_discord_mention> - <8s_aura>
+      **9.** <9s_discord_mention> - <9s_aura>
+      **10.** <10s_discord_mention> - <10s_aura>
+  statistic_donate:
+    title: "Статистика по донатам"
+    color: 10180863
+    description: |-
+      **1.** <1s_discord_mention> - <1s_total_donated>
+      **2.** <2s_discord_mention> - <2s_total_donated>
+      **3.** <3s_discord_mention> - <3s_total_donated>
   form_start:
     title: "📝 Анкеты"
     color: 10180863
@@ -82,8 +87,14 @@ embeds:
     description: "<field_nickname_value> | <discord_mention> | https://twitch.tv/<twitch_name>"
     color: 10180863
     fields:
-      - name: "<filed_age_label>"
-        value: "<field_age_value>"
+      - name: "<field_about_self_label>"
+        value: "<field_about_self_value>"
+      - name: "<field_about_minecraft_label>"
+        value: "<field_about_minecraft_value>"
+      - name: "<field_plans_label>"
+        value: "<field_plans_value>"
+      - name: "<field_waitings_label>"
+        value: "<field_waitings_value>"
   go_live:
     title: "<stream_title>"
     url: "<twitch_url>"
@@ -165,10 +176,49 @@ embeds:
         value: "<aura>"
         inline: true
 
+form:
+  button_label: "Оставить заявку"
+  modal:
+    label: "Анкета"
+    questions:
+      nickname: # НЕ МЕНЯТЬ ID НА ЭТОЙ СТРОЧКЕ!
+        position: 1
+        label: "Никнейм Minecraft"
+        placeholder: "Ваш никнейм с учетом регистра"
+        style: SHORT
+      about_self:
+        position: 2
+        label: "Расскажите о себе"
+        placeholder: "Напишите кратко о своем характере или интересах. Сколько играете в Minecraft, например"
+        style: PARAGRAPH
+      about_minecraft:
+        position: 3
+        label: "Опыт игры на приватных серверах"
+        placeholder: "Опишите, на каких серверах вы играли, почему уходили с них. Почему решили выбрать этот сервер?"
+        style: PARAGRAPH
+        required: true
+      plans:
+        position: 4
+        label: "Планы на сервер"
+        placeholder: "Опишите, чем хотите заняться на сервере, какие проекты планируете реализовать, что в них уникального"
+        style: PARAGRAPH
+      waitings:
+        position: 5
+        label: "Ваши ожидания"
+        placeholder: "Чего вы ожидаете от нашего сервера? Может, крутых ивентов, ламповой атмосферы или найти знакомства?"
+        style: PARAGRAPH
+
+rcon:
+  host: ""
+  port: 25567
+  password: ""
+
+
 messages:
-  go_live: "<twitch_name> начал стрим! ||@everyone||"
-  go_offline: "<twitch_name> закончил стрим"
   twitch_icon_url: "https://cdn.discordapp.com/attachments/1208770310950883378/1215851310474203199/twitch-logo-1.png?ex=65fe40c5&is=65ebcbc5&hm=c0bef61d2378b734f7bb1feb757de86f636bc53f3cbef3a3fa54753af047a989&"
+
+  go_live: "**<twitch_name> начал стрим!** ||<@&1218302285927420026>||"
+  go_offline: "**<twitch_name> закончил стрим**"
   something_went_wrong: "Что-то пошло не так! Свяжитесь с разработчиком"
   donate_yoomoney: "Перейдите по ссылке ниже и оплатите пожертвование через кошелек ЮMoney или банковскую карту."
   donate_donationalerts: "Перейдите по ссылке ниже и оплатите пожертвование.\n> Для выдачи награды за пожертвование **обязательно** укажите **только** ваш Discord ID (`<discord_id>`) в комментарии к пожертвованию."
@@ -198,10 +248,13 @@ messages:
   jf_declined: "Анкета discord_mention (`<discord_name>`/`<player_name>`) была отклонена администратором <admin_mention>!"
   jf_accepted_target: "<discord_mention>, вы были приняты на сервер администратором <admin_mention>"
   jf_declined_target: "<discord_mention>, ваша анкета была отклонена администратором <admin_mention>"
-  need_linked_twitch: "Вам нужно иметь привязанный аккаунт Twitch!"
+  need_linked_twitch: "Вам нужно иметь привязанный аккаунт Twitch!\nОтправьте команду `/link` в личные сообщения <@1208477644434440253>"
   not_enough_aura: "У вас недостаточно ауры! (<aura>/<need_aura>)"
-  profile: "Профиль пользователя <selector_name>\n<>Никнейм Minecraft: <player_name>\nTwitch: https://twitch.tv/<twitch_name>\nDiscord: <discord_mention> / `@<discord_name>` / `<discord_id>`\n\nАура: <aura>"
+  profile: "Профиль пользователя <selector_name>\nНикнейм Minecraft: <player_name>\nTwitch: https://twitch.tv/<twitch_name>\nDiscord: <discord_mention> / `@<discord_name>` / `<discord_id>`\n\nАура: <aura>"
   user_already_exists: "Пользователь с такими данными уже существует!"
+  player_name_not_found: "Не найден никнейм Minecraft!"
   profile_whitelist_added: "Игрок <player_name> добавлен в White-List!"
   profile_whitelist_removed: "Игрок <player_name> удален с White-List!"
-  player_name_not_found: "Не найден никнейм Minecraft!"
+
+  rcon_connection_error: "Ошибка при подключении к серверу! Обратитесь к администрации"
+  shop_bought: "Покупка прошла успешно!"

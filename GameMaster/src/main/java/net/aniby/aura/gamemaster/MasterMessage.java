@@ -16,7 +16,7 @@ public record MasterMessage(Date date, String sender, String receiver, Component
 
     public static ArrayList<MasterMessage> getMessages(@NotNull String receiver, int page) {
         ArrayList<MasterMessage> receivedMessages = new ArrayList<>();
-        int messagesPerPage = GameMaster.getInstance().getConfig().getInt("list.messages_per_page", 10);
+        int messagesPerPage = AuraGameMaster.getInstance().getConfig().getInt("list.messages_per_page", 10);
         for (int i = messages.size() - 1; i >= 0; i--) {
             MasterMessage message = messages.get(i);
             if (Objects.equals(receiver, message.receiver)) {

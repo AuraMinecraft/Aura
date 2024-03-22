@@ -1,0 +1,5 @@
+name: AuraCore
+version: '${project.version}'
+main: net.aniby.aura.core.AuraCore
+api-version: '1.20'
+load: STARTUP

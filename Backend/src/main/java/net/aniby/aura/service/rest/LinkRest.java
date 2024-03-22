@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.AuraConfig;
+import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.http.IOHelper;
 import net.aniby.aura.service.user.UserService;

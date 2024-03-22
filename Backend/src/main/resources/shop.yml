@@ -1,0 +1,9 @@
+coreprotect:
+  name: "Доступ к CoreProtect (/co i)"
+  value: "coreprotect"
+  cost: 10
+  minecraft:
+    commands:
+      - "lp user <player_name> parent add coreprotect"
+  discord:
+    roles: []

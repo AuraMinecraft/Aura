@@ -1,0 +1,8 @@
+name: AuraVotes
+version: '${project.version}'
+main: net.aniby.aura.paper.votes.AuraVotes
+api-version: '1.20'
+depend: [ AuraCore ]
+authors: [ An1by ]
+description: Vote plugin with aura integration
+website: https://aura.aniby.net/

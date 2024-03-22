@@ -53,7 +53,19 @@
       </plugin>
     </plugins>
   </build>
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
   <dependencies>
+    <dependency>
+      <groupId>io.github.MrGraversen</groupId>
+      <artifactId>minecraft-rcon</artifactId>
+      <version>1.0.0</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>net.aniby.aura</groupId>
       <artifactId>API</artifactId>

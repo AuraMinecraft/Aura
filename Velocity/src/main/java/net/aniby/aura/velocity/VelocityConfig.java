@@ -4,6 +4,7 @@ import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 
@@ -20,12 +21,11 @@ public class VelocityConfig {
     private ConfigurationNode root;
 
     private final MiniMessage miniMessage = MiniMessage.builder()
-            .tags(TagResolver.standard())
+            .tags(StandardTags.defaults())
             .build();
 
     public VelocityConfig(File file) throws IOException {
         this.loader = YAMLConfigurationLoader.builder().setPath(file.toPath()).build();
-        System.out.println(file.getAbsolutePath());
         load();
     }
 
