@@ -1,11 +1,11 @@
 package net.aniby.aura.paper.votes;
 
 import co.aikar.commands.PaperCommandManager;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import net.aniby.aura.paper.votes.commands.CollectionCommand;
-import net.aniby.aura.paper.votes.commands.VoteCommand;
+import net.aniby.aura.core.CoreConfig;
+import net.aniby.aura.paper.votes.command.CollectionCommand;
+import net.aniby.aura.paper.votes.command.VoteCommand;
 import net.aniby.aura.paper.votes.logic.AuraCollection;
 import net.aniby.aura.paper.votes.logic.Vote;
 import net.aniby.aura.paper.votes.logic.VotesTimer;
@@ -30,16 +30,11 @@ public final class AuraVotes extends JavaPlugin {
 
 
     public static String getPlainMessage(String path) {
-        return instance.getConfig().getConfigurationSection("messages")
-                        .getString(path);
+        return CoreConfig.getPlainMessage(instance.getConfig(), path);
     }
 
     public static Component getMessage(String path, TagResolver... tags) {
-        return miniMessage.deserialize(
-                instance.getConfig().getConfigurationSection("messages")
-                        .getString(path),
-                tags
-        );
+        return CoreConfig.getMessage(instance.getConfig(), path, tags);
     }
 
     public static Component getMessage(String path, List<TagResolver> tags) {

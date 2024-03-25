@@ -7,29 +7,31 @@ import com.j256.ormlite.table.TableUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import net.aniby.aura.entity.AuraUser;
+import net.aniby.aura.dependencies.DatabaseLibrary;
 import net.aniby.aura.entity.AuraDonate;
+import net.aniby.aura.entity.AuraUser;
 
-import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.sql.SQLException;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuraDatabase {
-    final @Nonnull DatabaseConnectionData connectionData;
-    ConnectionSource connectionSource;
+    final ConnectionSource connectionSource;
     @Getter
-    Dao<AuraUser, Integer> users;
+    final Dao<AuraUser, Integer> users;
     @Getter
-    Dao<AuraDonate, Integer> donates;
+    final Dao<AuraDonate, Integer> donates;
 
-    public AuraDatabase(String url, String username, String password) throws SQLException {
-        this.connectionData = new DatabaseConnectionData(url, username, password);
-        this.connect();
-    }
-
-    public void connect() throws SQLException {
-        this.connectionSource = this.connectionData.connectionSource();
+    public AuraDatabase(String hostname, String database, String user, String password, String connectionParameters) throws SQLException, ReflectiveOperationException, IOException, URISyntaxException {
+        this.connectionSource = DatabaseLibrary.MYSQL.connectToORM(
+                hostname,
+                database + connectionParameters,
+                user,
+                password
+        );
         this.users = DaoManager.createDao(
                 this.connectionSource,
                 AuraUser.class
@@ -48,12 +50,16 @@ public class AuraDatabase {
         try {
             this.users.queryForFirst();
         } catch (Exception e) {
-            TableUtils.createTableIfNotExists(this.connectionSource, AuraUser.class);
+            try {
+                TableUtils.createTableIfNotExists(this.connectionSource, AuraUser.class);
+            } catch (Exception ignored) {}
         }
         try {
             this.donates.queryForFirst();
         } catch (Exception e) {
-            TableUtils.createTableIfNotExists(this.connectionSource, AuraDonate.class);
+            try {
+                TableUtils.createTableIfNotExists(this.connectionSource, AuraDonate.class);
+            } catch (Exception ignored) {}
         }
     }
 }

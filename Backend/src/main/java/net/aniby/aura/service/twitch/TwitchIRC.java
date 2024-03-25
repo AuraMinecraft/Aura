@@ -81,6 +81,10 @@ public class TwitchIRC {
 
         this.client = TwitchClientBuilder.builder()
                 .withEnableHelix(true)
+
+                .withEnableChat(true)
+                .withChatAccount(this.credential)
+
                 .withEnablePubSub(true)
                 .withClientId(this.clientId)
                 .withClientSecret(this.clientSecret)

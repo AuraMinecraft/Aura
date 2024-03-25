@@ -1,10 +1,14 @@
 package net.aniby.aura.discord.hash;
 
+import com.mysql.cj.exceptions.CJCommunicationsException;
+import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 import lombok.SneakyThrows;
 import net.aniby.aura.entity.AuraDonate;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.mysql.AuraDatabase;
 
+import javax.naming.CommunicationException;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;

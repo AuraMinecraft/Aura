@@ -7,11 +7,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
-public class FrequencyMap implements Comparator<String> {
-    public static HashMap<String, Integer> getFrequencies(Iterable<String> list) {
-        HashMap<String, Integer> frequencies = new HashMap<>();
+public class DoubleFrequencyMap implements Comparator<String> {
+    public static HashMap<String, Double> getFrequencies(Iterable<String> list) {
+        HashMap<String, Double> frequencies = new HashMap<>();
         for (String element : list) {
-            int count = frequencies.getOrDefault(element, 1);
+            double count = frequencies.getOrDefault(element, 1.0);
             frequencies.put(element, count + 1);
         }
         return frequencies;
@@ -19,13 +19,13 @@ public class FrequencyMap implements Comparator<String> {
 
 
     @Getter
-    HashMap<String, Integer> frequencies;
+    HashMap<String, Double> frequencies;
 
-    public FrequencyMap(Iterable<String> list) {
+    public DoubleFrequencyMap(Iterable<String> list) {
         this.frequencies = getFrequencies(list);
     }
 
-    public FrequencyMap(HashMap<String, Integer> frequencies) {
+    public DoubleFrequencyMap(HashMap<String, Double> frequencies) {
         this.frequencies = frequencies;
     }
 
@@ -47,16 +47,16 @@ public class FrequencyMap implements Comparator<String> {
         return common;
     }
 
-    public ArrayList<String> getMostCommonNotLower(int minimum) {
-        int maxInMap = this.frequencies.values().stream().mapToInt(Integer::intValue).max().orElse(0);
-        int maxValue = Math.max(maxInMap, minimum);
+    public ArrayList<String> getMostCommonNotLower(double minimum) {
+        double maxInMap = this.frequencies.values().stream().mapToDouble(Double::doubleValue).max().orElse(0);
+        double maxValue = Math.max(maxInMap, minimum);
         return this.frequencies.keySet().stream()
                 .filter(k -> this.frequencies.get(k) == maxValue)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public ArrayList<String> getMostCommon() {
-        int maxValue = this.frequencies.values().stream().mapToInt(Integer::intValue).max().orElse(0);
+        double maxValue = this.frequencies.values().stream().mapToDouble(Double::doubleValue).max().orElse(0);
         return this.frequencies.keySet().stream()
                 .filter(k -> this.frequencies.get(k) == maxValue)
                 .collect(Collectors.toCollection(ArrayList::new));

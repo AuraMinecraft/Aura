@@ -2,6 +2,7 @@ package net.aniby.aura.service.user;
 
 import com.github.twitch4j.helix.domain.User;
 import com.j256.ormlite.stmt.Where;
+import io.graversen.minecraft.rcon.service.MinecraftRconService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -44,6 +45,7 @@ public class UserService {
     AuraDatabase database;
     UserRepository userRepository;
     DiscordIRC discordIRC;
+    MinecraftRconService rconService;
 
 
     @SneakyThrows
@@ -325,5 +327,15 @@ public class UserService {
             );
         }
         return null;
+    }
+
+    public void setWhitelist(AuraUser user, boolean whitelisted) {
+        if (user.getPlayerName() == null)
+            return;
+
+        user.setWhitelisted(whitelisted);
+        rconService.minecraftRcon().ifPresent(rcon -> rcon.sendAsync(() -> String.format(
+                "minecraft:whitelist %s %s", whitelisted ? "add" : "remove", user.getPlayerName()
+        )));
     }
 }

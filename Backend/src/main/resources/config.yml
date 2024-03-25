@@ -32,9 +32,11 @@ http_server:
   external_url: "http://localhost:23160/"
 
 mysql:
-  url: ""
-  login: ""
+  host: ""
+  database: ""
+  user: ""
   password: ""
+  parameters: ""
 
 discord:
   bot_token: ""

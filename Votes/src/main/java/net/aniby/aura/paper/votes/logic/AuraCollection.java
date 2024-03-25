@@ -116,18 +116,7 @@ public class AuraCollection {
                     : depositValue;
 
             depositUser.setAura(depositUser.getAura() + depositReturn);
-            try {
-                repository.update(depositUser);
-            } catch (Exception e) {
-                try {
-                    core.getDatabase().disconnect();
-                    core.getDatabase().connect();
-
-                    repository.update(depositUser);
-                } catch (SQLException ignored) {
-
-                }
-            }
+            repository.update(depositUser);
 
             Player player = Bukkit.getPlayer(depositor);
             if (player != null) {

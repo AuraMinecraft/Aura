@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.mysql.AuraDatabase;
 
+import java.util.List;
+
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -21,6 +23,24 @@ public class UserRepository {
                 .where()
                 .eq("player_name", playerName)
                 .queryForFirst();
+    }
+
+    @SneakyThrows
+    public AuraUser findByWhitelistedPlayerName(String playerName) {
+        return database.getUsers().queryBuilder()
+                .where()
+                .eq("player_name", playerName)
+                .and()
+                .eq("whitelisted", true)
+                .queryForFirst();
+    }
+
+    @SneakyThrows
+    public List<AuraUser> findWhitelistedPlayers() {
+        return database.getUsers().queryBuilder()
+                .where()
+                .eq("whitelisted", true)
+                .query();
     }
 
     @SneakyThrows

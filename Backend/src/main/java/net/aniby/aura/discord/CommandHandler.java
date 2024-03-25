@@ -23,7 +23,8 @@ public class CommandHandler {
         this.discordCommands = jda.updateCommands();
     }
 
-    public <T extends ACommand> void registerCommands(T... inputCommands) {
+    @SafeVarargs
+    public final <T extends ACommand> void registerCommands(T... inputCommands) {
         for (T command : inputCommands) {
             commands.add(command);
             if (command.slashCommandData() != null)

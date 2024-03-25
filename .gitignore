@@ -1,3 +1,5 @@
+libraries/
+shop.yml
 /config.yml
 target/
 !.mvn/wrapper/maven-wrapper.jar

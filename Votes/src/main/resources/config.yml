@@ -16,9 +16,6 @@ actions:
   ADMIN_LIGHTNING_BOLT: "Ударить администратора An1by молнией"
 
 messages:
-  not_enough_aura: "<red>У вас недостаточно ауры!"
-  database_error: "<red>Ошибка базы! Свяжитесь с администратором!"
-
   invalid_aura: "<red>Указано недоступное количество ауры!"
 
   collection_exists: "<red>Сбор на уже запущен! (<yellow><action_name></yellow>)"

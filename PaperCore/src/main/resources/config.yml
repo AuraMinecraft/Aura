@@ -1,4 +1,18 @@
 mysql:
-  url: ""
-  login: ""
-  password: ""
+    host: ""
+    database: ""
+    user: ""
+    password: ""
+    parameters: ""
+
+messages:
+    reload: "<green>Плагин перезагружен!"
+    no_permission: "<red>Недостаточно прав!"
+    not_enough_aura: "<red>У вас недостаточно ауры!"
+    database_error: "<red>Ошибка базы! Свяжитесь с администратором!"
+    no_player: "<red>Игрок не найден!"
+
+    aura_command: "<color:#a432a8>У вас <color:#852ba6><aura> ауры</color:#852ba6>"
+
+    aura_give_sender: "<green>Вы выдали <aura> ауры игроку <player_name>!"
+    aura_give_target: "<green><sender_name> выдал вам <aura> ауры!"

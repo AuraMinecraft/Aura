@@ -14,7 +14,7 @@ public class AuraDonate {
     @DatabaseField(generatedId = true, canBeNull = false)
     int id;
 
-    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = "discord_id", canBeNull = false)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = "user_id", canBeNull = false)
     AuraUser user;
 
     @DatabaseField(canBeNull = false)

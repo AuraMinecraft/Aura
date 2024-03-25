@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.util.AuraConfig;
 import net.aniby.aura.discord.CommandHandler;
-import net.aniby.aura.service.discord.commands.*;
+import net.aniby.aura.service.discord.command.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;

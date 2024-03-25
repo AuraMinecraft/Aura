@@ -1,5 +1,6 @@
 package net.aniby.aura.service.discord;
 
+import io.graversen.minecraft.rcon.service.MinecraftRconService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.util.AuraConfig;
@@ -36,6 +37,7 @@ public class DiscordForm {
     DiscordIRC discordIRC;
     UserService userService;
     UserRepository userRepository;
+
     public DiscordForm(AuraConfig config, @Lazy DiscordIRC discordIRC, @Lazy UserService userService, UserRepository userRepository) {
         this.config = config;
         this.discordIRC = discordIRC;
@@ -63,7 +65,7 @@ public class DiscordForm {
             return;
         }
 
-        auraUser.setWhitelisted(true);
+        userService.setWhitelist(auraUser, true);
         userRepository.update(auraUser);
 
         List<Replacer> tags = userService.getReplacers(auraUser);

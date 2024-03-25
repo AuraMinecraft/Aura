@@ -91,6 +91,7 @@ public class DonateService {
         createDonate(discordId, notification.getWithdrawAmount(), notification.getAmount(), timestamp);
     }
 
+
     public AuraDonate createDonate(@NotNull String discordId, double amount, double realAmount, long timestamp) {
         AuraUser user = userService.getByWith("discord_id", discordId);
 

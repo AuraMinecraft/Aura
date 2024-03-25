@@ -12,6 +12,7 @@ import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.mysql.AuraDatabase;
 import net.aniby.aura.tool.Replacer;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
