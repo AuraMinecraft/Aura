@@ -47,7 +47,6 @@ public class UserService {
     DiscordIRC discordIRC;
     MinecraftRconService rconService;
 
-
     @SneakyThrows
     public AuraUser getByWithOr(Object... args) {
         List<Object> list = Arrays.stream(args).toList();
@@ -120,10 +119,10 @@ public class UserService {
         if (identifier.startsWith("tid/") || identifier.startsWith("twitch_id/")) {
             String twitchId = identifier.split("/")[1];
             return getByWith("twitch_id", twitchId);
-//        }
-//        else if (identifier.startsWith("twitch/") || identifier.startsWith("t/")) {
-//            String twitchName = identifier.split("/")[1];
-//            return CAuraUser.getByTwitchName(twitchName);
+        }
+        else if (identifier.startsWith("twitch/") || identifier.startsWith("t/")) {
+            String twitchName = identifier.split("/")[1];
+            return getByWith("twitch_name", twitchName);
         } else if (identifier.startsWith("<@") && identifier.endsWith(">") && identifier.length() >= 20) {
             String discordId = identifier.replace("<@", "").replace(">", "");
             return getByWith("discord_id", discordId);
@@ -335,7 +334,7 @@ public class UserService {
 
         user.setWhitelisted(whitelisted);
         rconService.minecraftRcon().ifPresent(rcon -> rcon.sendAsync(() -> String.format(
-                "minecraft:whitelist %s %s", whitelisted ? "add" : "remove", user.getPlayerName()
+                "simplewhitelist %s %s", whitelisted ? "add" : "remove", user.getPlayerName()
         )));
     }
 }

@@ -1,4 +1,4 @@
-package net.aniby.aura.core.command;
+package net.aniby.aura.core;
 
 import lombok.RequiredArgsConstructor;
 import net.aniby.aura.core.AuraCore;

@@ -60,67 +60,17 @@ public class ProfileCommand implements ACommand {
         String subcommandName = event.getSubcommandName();
         assert subcommandName != null;
 
-        switch (subcommandName) {
-            case "info" -> {
-                event.getHook()
-                        .editOriginal(config.getMessage("profile", resolvers))
-                        .queue();
-                return;
-            }
-            case "whitelist" -> {
-                if (user.getPlayerName() == null) {
-                    OptionMapping mapping = event.getOption("player_name");
-                    if (mapping != null) {
-                        String newName = mapping.getAsString();
-
-                        if (newName.isEmpty()) {
-                            event.getHook().editOriginal(config.getMessage("player_name_not_found")).queue();
-                            return;
-                        }
-
-                        if (userService.getByWith("player_name", newName) != null) {
-                            event.getHook().editOriginal(config.getMessage("user_already_exists")).queue();
-                            return;
-                        }
-
-                        user.setPlayerName(newName);
-                    } else {
-                        event.getHook().editOriginal(config.getMessage("unknown_action"))
-                                .queue();
-                        return;
-                    }
-                }
-
-                boolean newValue = !user.isWhitelisted();
-                user.setWhitelisted(newValue);
-                userRepository.update(user);
-
-                event.getHook()
-                        .editOriginal(config.getMessage(
-                                "profile_whitelist_" + (newValue ? "added" : "removed")
-                        ))
-                        .queue();
-                return;
-            }
-            default -> {
-                event.getHook().editOriginal(config.getMessage("unknown_action"))
-                        .queue();
-                return;
-            }
-        }
-
+        event.getHook()
+                .editOriginal(config.getMessage("profile", resolvers))
+                .queue();
+        return;
     }
 
     @Override
     public SlashCommandData slashCommandData() {
-        SubcommandData info = new SubcommandData("info", "Информация о профиле")
-                .addOption(OptionType.STRING, "identifier", "Индентификатор игрока", true, false);
-        SubcommandData whitelist = new SubcommandData("whitelist", "Переключить состояние белого списка")
+        return Commands.slash("profile", "Информация о профиле")
                 .addOption(OptionType.STRING, "identifier", "Индентификатор игрока", true, false)
-                .addOption(OptionType.STRING, "player_name", "Никнейм игрока Minecraft", false, false);
-
-        return Commands.slash("profile", "Управление аккаунтом пользователя")
-                .addSubcommands(info, whitelist).setDefaultPermissions(DefaultMemberPermissions.enabledFor(
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(
                         Permission.BAN_MEMBERS
                 )).setGuildOnly(true);
     }

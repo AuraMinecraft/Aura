@@ -1,5 +1,6 @@
 package net.aniby.aura.service.discord.command;
 
+import io.graversen.minecraft.rcon.service.MinecraftRconService;
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.discord.ACommand;
 import net.aniby.aura.entity.AuraUser;
@@ -70,7 +71,7 @@ public class WhitelistCommand implements ACommand {
 
         // Database
         boolean whitelist = !user.isWhitelisted();
-        user.setWhitelisted(whitelist);
+        userService.setWhitelist(user, whitelist);
         userRepository.update(user);
 
         // Discord
@@ -80,6 +81,8 @@ public class WhitelistCommand implements ACommand {
             assert discordUser != null;
             discordIRC.getDefaultGuild().addRoleToMember(discordUser, addRole).queue();
         } catch (Exception ignored) {}
+
+
 
         event.getHook().editOriginal(
                         config.getMessage(

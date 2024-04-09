@@ -1,0 +1,35 @@
+{
+  "content": null,
+  "avatar_url": "",
+  "username": "Аура | Логи",
+
+  "embeds": [
+    {
+      "author": {
+        "name": "<username>",
+        "url": "https://twitch.tv/<twitch_name>",
+        "icon_url": "<avatar>"
+      },
+
+      "title": "Трата баллов у стримера <streamer_name>",
+      "url": "https://twich.tv/<streamer_name>",
+
+      "fields": [
+        {
+          "name": "Получено ауры",
+          "value": "<earned_aura>",
+          "inline": true
+        },
+        {
+          "name": "Потрачено баллов",
+          "value": "<wasted_points>",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "icon_url": "https://cdn.discordapp.com/attachments/1208770310950883378/1215851310474203199/twitch-logo-1.png?ex=65fe40c5&is=65ebcbc5&hm=c0bef61d2378b734f7bb1feb757de86f636bc53f3cbef3a3fa54753af047a989&",
+        "text": "Зрители Twitch"
+      }
+    }
+  ]
+}

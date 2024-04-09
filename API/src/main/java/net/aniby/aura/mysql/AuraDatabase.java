@@ -9,21 +9,20 @@ import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import net.aniby.aura.dependencies.DatabaseLibrary;
 import net.aniby.aura.entity.AuraDonate;
+import net.aniby.aura.entity.AuraTransaction;
 import net.aniby.aura.entity.AuraUser;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.sql.SQLException;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuraDatabase {
     final ConnectionSource connectionSource;
-    @Getter
     final Dao<AuraUser, Integer> users;
-    @Getter
     final Dao<AuraDonate, Integer> donates;
+    final Dao<AuraTransaction, Integer> transactions;
 
     public AuraDatabase(String hostname, String database, String user, String password, String connectionParameters) throws SQLException, ReflectiveOperationException, IOException, URISyntaxException {
         this.connectionSource = DatabaseLibrary.MYSQL.connectToORM(
@@ -40,13 +39,17 @@ public class AuraDatabase {
                 this.connectionSource,
                 AuraDonate.class
         );
+        this.transactions = DaoManager.createDao(
+                this.connectionSource,
+                AuraTransaction.class
+        );
     }
 
     public void disconnect() {
         this.connectionSource.closeQuietly();
     }
 
-    public void createTables() throws SQLException {
+    public void createTables() {
         try {
             this.users.queryForFirst();
         } catch (Exception e) {
@@ -59,6 +62,13 @@ public class AuraDatabase {
         } catch (Exception e) {
             try {
                 TableUtils.createTableIfNotExists(this.connectionSource, AuraDonate.class);
+            } catch (Exception ignored) {}
+        }
+        try {
+            this.transactions.queryForFirst();
+        } catch (Exception e) {
+            try {
+                TableUtils.createTableIfNotExists(this.connectionSource, AuraTransaction.class);
             } catch (Exception ignored) {}
         }
     }

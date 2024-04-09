@@ -10,11 +10,14 @@ import lombok.experimental.FieldDefaults;
 import net.aniby.aura.entity.AuraDonate;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.mysql.AuraDatabase;
+import net.aniby.aura.tool.DiscordWebhook;
 import net.aniby.aura.tool.Replacer;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import static net.aniby.aura.tool.Replacer.r;
 

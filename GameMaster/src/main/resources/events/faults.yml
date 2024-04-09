@@ -1,0 +1,22 @@
+egg_in_end: true
+find_range: 15
+fault_aura_mod: 10
+
+event_webhook: "https://discord.com/api/webhooks/1226554159587917935/Bpsad0A1hcvZTWQoy90EuN2H_EbXN4_6QVVmGk-4ccm2abBeZGm9hfz4cgZVNyLo4n_Y"
+
+messages:
+  too_far_to_fault: "<red>Вы слишком далеко от разлома!"
+  fault_input: "<green>Вы вложили <input_aura> ауры в разлом!"
+  fault_compress: "<color:#8a5194>Разлом постепенно сужается</color:#8a5194>"
+  fault_closed: "<color:#8a5194>Разлом закрыт</color:#8a5194>"
+  empty_fault_list: "<red>Список разломов пуст!"
+  command_extend: "<green>Разломы расширяются"
+  command_narrow: "<green>Разломы сужаются"
+  command_clear: "<green>Разломы пропадают"
+  fault_too_close: "<red>Разлом слишком близок к новому!"
+  command_create: "<green>Разлом создан"
+
+  fault_in_processing: "<yellow>Разломов в обработке: <gold><fault_in_processing_count>"
+
+fault_creators: []
+list: []

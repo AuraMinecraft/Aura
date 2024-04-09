@@ -5,14 +5,22 @@ mysql:
     password: ""
     parameters: ""
 
+webhook:
+    transactions: https://discord.com/api/webhooks/1225830584199151727/b0Mq3mB1sf8Yk9l7zChyEPEl0hpNTvSsbVvCCL6njcW48ZQIOuXlxDz76R_VQAMzhhQU
+
 messages:
     reload: "<green>Плагин перезагружен!"
     no_permission: "<red>Недостаточно прав!"
     not_enough_aura: "<red>У вас недостаточно ауры!"
     database_error: "<red>Ошибка базы! Свяжитесь с администратором!"
     no_player: "<red>Игрок не найден!"
+    invalid_arguments: "<red>Неверные аргументы!"
 
     aura_command: "<color:#a432a8>У вас <color:#852ba6><aura> ауры</color:#852ba6>"
 
     aura_give_sender: "<green>Вы выдали <aura> ауры игроку <player_name>!"
     aura_give_target: "<green><sender_name> выдал вам <aura> ауры!"
+
+    pay_sender: "<green>Вы успешно перевели <color:#852ba6><aura> ауры</color:#852ba6> игроку <receiver>!"
+    pay_receiver: "<color:#a432a8>Вы получили <color:#852ba6><aura> ауры</color:#852ba6> от игрока <sender>!"
+    pay_comment: "<yellow>Комментарий к переводу: <gray><comment>"

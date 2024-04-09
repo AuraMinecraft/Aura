@@ -12,6 +12,7 @@ import net.aniby.aura.core.AuraCore;
 import net.aniby.aura.repository.UserRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -19,6 +20,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Objects;
 
 @CommandAlias("event")
 public class EventCommand extends BaseCommand {
@@ -26,10 +28,15 @@ public class EventCommand extends BaseCommand {
     @Description("Answer to Game Master's event invite")
     public void answer(CommandSender sender, String answer) {
         String name = sender.getName();
-        if (!EventQueue.getQueue().containsKey(name)) {
+        EventQueue queue = EventQueue.getQueue().stream().filter(
+                q -> Objects.equals(q.getReceiver(), name)
+        ).findFirst().orElse(null);
+        if (queue == null) {
             sender.sendMessage(AuraGameMaster.getMessage("no_event"));
             return;
         }
+
+        EventQueue.getQueue().remove(queue);
 
         switch (answer) {
             case "accept" -> {
@@ -42,18 +49,24 @@ public class EventCommand extends BaseCommand {
                     return;
                 }
 
-                double aura = EventQueue.getQueue().get(name);
-
                 sender.sendMessage(AuraGameMaster.getMessage("answer_accepted",
-                        Placeholder.unparsed("event_aura", String.valueOf(aura))
+                        Placeholder.unparsed("event_aura", String.valueOf(queue.getAura()))
                 ));
 
-                user.setAura(user.getAura() - aura);
+                Player master = Bukkit.getPlayer(queue.getSender());
+                if (master != null)
+                    master.sendMessage(AuraGameMaster.getMessage("answer_accepted_master"));
+
+                user.setAura(user.getAura() - queue.getAura());
                 repository.update(user);
                 return;
             }
             case "decline" -> {
                 sender.sendMessage(AuraGameMaster.getMessage("answer_declined"));
+
+                Player master = Bukkit.getPlayer(queue.getSender());
+                if (master != null)
+                    master.sendMessage(AuraGameMaster.getMessage("answer_declined_master"));
                 return;
             }
         }
@@ -68,12 +81,13 @@ public class EventCommand extends BaseCommand {
         Player player = target.getPlayer();
         String playerName = player.getName();
 
-        HashMap<String, Double> queue = EventQueue.getQueue();
-        if (queue.containsKey(playerName)) {
-            queue.remove(playerName);
-        } else {
-            queue.put(playerName, aura);
+        EventQueue queue = EventQueue.getQueue().stream().filter(
+                q -> Objects.equals(q.getReceiver(), playerName)
+        ).findFirst().orElse(null);
+        if (queue != null) {
+            EventQueue.getQueue().remove(queue);
         }
+        EventQueue.getQueue().add(new EventQueue(sender.getName(), playerName, aura));
 
         player.sendMessage(message);
         player.sendMessage(AuraGameMaster.getMessage("answer_response"));
@@ -90,6 +104,7 @@ public class EventCommand extends BaseCommand {
         MasterMessage.addMessage(message);
 
         targetPlayer.sendMessage(component);
+        sender.sendMessage(AuraGameMaster.getMessage("event_message_sent"));
     }
 
     @Subcommand("list")

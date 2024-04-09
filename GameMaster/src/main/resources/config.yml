@@ -2,6 +2,8 @@ list:
   messages_per_page: 10
 
 messages:
+  event_message_sent: "<green>Вы отправили сообщение игроку!"
+
   invalid_executor: "<red>Неверный исполнитель!"
   highlighted: "<green>Вы подсветили для себя игрока <target>"
   highlighting_disabled: "<green>Вы убрали подсветку с <target>"
@@ -12,7 +14,9 @@ messages:
   invalid_arguments: "<red>Указаны неверные аргументы!"
   no_event: "<red>Ивент не найден!"
   answer_accepted: "<green>Вы приняли ивент от гейм-мастера! Потрачено ауры: <event_aura>"
+  answer_accepted_master: "<green>Игрок принял ваш ивент!"
   answer_declined: "<yellow>Вы отклонили ивент от гейм-мастера!"
+  answer_declined_master: "<red>Игрок отклонил ваш ивент!"
   answer_response: "<green><click:run_command:/event answer accept>Принять</click></green> / <red><click:run_command:/event answer decline>Отклонить</click></red>"
   list_title: "<yellow>Сообщения игрока <name>"
   list_prefix: "<yellow><date> <sender>: "

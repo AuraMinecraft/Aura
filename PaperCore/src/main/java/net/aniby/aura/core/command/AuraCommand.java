@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import net.aniby.aura.core.AuraCore;
+import net.aniby.aura.core.CommandFixer;
 import net.aniby.aura.core.CoreConfig;
 import net.aniby.aura.entity.AuraUser;
 import net.aniby.aura.repository.UserRepository;

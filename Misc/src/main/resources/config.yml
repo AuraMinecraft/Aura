@@ -1,0 +1,44 @@
+allow_end: false
+
+dragon_egg:
+  in_container: false
+  can_leave_with: false
+
+disable_elytra:
+  active: true
+
+  allowed_end_radius: 1000
+  reset_velocity: true
+
+money:
+  gold_coin:
+    custom_model_data: 801
+    aura: 10
+    diamond:
+      base: 30
+      range: 5
+    emerald:
+      base: 10
+      range: 2
+  silver_coin:
+    custom_model_data: 802
+    iron:
+      base: 54
+      range: 4
+    gold:
+      base: 47
+      range: 3
+  copper_coin:
+    custom_model_data: 803
+    copper:
+      base: 60
+      range: 4
+    lapis:
+      base: 60
+      range: 4
+
+
+messages:
+  switch_end: "<green>Вы переключили доступность Энда"
+  item_not_found: "<red>Предмет не найден"
+  item_give: "<green>Предмет выдан"

@@ -64,7 +64,8 @@ public class LinkRest {
             if (streamer == null)
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Discord User not found");
 
-            twitchIRC.registerStreamer(streamer);
+//            twitchIRC.registerStreamer(streamer);
+            twitchIRC.updateTwitchName(streamer);
 
             String redirectURL = config.getRoot().getNode("discord", "invite_url").getString();
             response.sendRedirect(redirectURL);

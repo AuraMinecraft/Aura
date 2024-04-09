@@ -2,18 +2,14 @@ package net.aniby.aura.entity;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import net.aniby.aura.tool.AuraUtils;
 
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 
-@Getter
-@Setter
+@Data
 @DatabaseTable(tableName = "users")
 @NoArgsConstructor
 @AllArgsConstructor

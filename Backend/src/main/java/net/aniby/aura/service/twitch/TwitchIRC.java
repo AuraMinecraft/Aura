@@ -10,6 +10,7 @@ import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.events.ChannelGoOfflineEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
+import com.github.twitch4j.pubsub.PubSubSubscription;
 import com.github.twitch4j.pubsub.domain.ChannelPointsRedemption;
 import com.github.twitch4j.pubsub.domain.ChannelPointsUser;
 import com.github.twitch4j.pubsub.events.RedemptionStatusUpdateEvent;
@@ -26,6 +27,7 @@ import net.aniby.aura.service.discord.DiscordLogger;
 import net.aniby.aura.service.user.UserService;
 import net.aniby.aura.tool.AuraUtils;
 import net.aniby.aura.tool.Replacer;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -35,10 +37,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.net.http.HttpResponse;
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static net.aniby.aura.tool.Replacer.r;
 
@@ -126,8 +125,11 @@ public class TwitchIRC {
     }
 
     public void initUser(AuraUser user) {
-        if (user.getTwitchId() != null)
-            registerStreamer(user);
+        if (user.getTwitchId() != null) {
+            updateTwitchName(user);
+            if (user.getTwitchName() != null && user.getPlayerName() != null)
+                listenAsStreamer(user);
+        }
     }
 
     private String generateAccessToken() {
@@ -190,24 +192,34 @@ public class TwitchIRC {
         return url + "link/auth?id=" + discordId + "&code=" + state.getCode();
     }
 
-    public void registerStreamer(AuraUser streamer) {
+    HashMap<AuraUser, PubSubSubscription> subMap = new HashMap<>();
+
+    public void listenAsStreamer(AuraUser streamer) {
         String name = streamer.getTwitchName(),
                 id = streamer.getTwitchId();
-        if (name == null) {
-            updateTwitchName(streamer);
-            name = streamer.getTwitchName();
-            userRepository.update(streamer);
-        }
-
-        if (id == null || name == null)
+        if (name == null || id == null)
             return;
 
         boolean created = client.getClientHelper().enableStreamEventListener(id, name);
-        if (!created) {
+        if (!created)
             return;
-        }
 
-        client.getPubSub().listenForChannelPointsRedemptionEvents(this.getCredential(), id);
+
+        PubSubSubscription sub = client.getPubSub().listenForChannelPointsRedemptionEvents(this.getCredential(), id);
+        subMap.put(streamer, sub);
+    }
+
+    public void unregisterStreamer(AuraUser user) {
+        String name = user.getTwitchName(),
+                id = user.getTwitchId();
+        if (name == null || id == null)
+            return;
+        try {
+            client.getClientHelper().disableStreamEventListener(name);
+            client.getPubSub().unsubscribeFromTopic(
+                    subMap.get(user)
+            );
+        } catch (Exception ignored) {}
     }
 
     void onStream(Stream stream, EventChannel eventChannel) {

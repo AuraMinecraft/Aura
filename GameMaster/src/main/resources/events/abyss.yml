@@ -1,20 +1,22 @@
 cult:
-  abyss:
-    - XenonMArty
-    - Unded_Inside
-  samovar:
-    - VeessMK
+  abyss: []
+  samovar: []
 
 attributes:
-  GENERIC_MAX_HEALTH:
-    XenonMArty: 2
-    Unded_Inside: 2
-    mrden1l: -2
-    seasnail8169: -2
 
 balance_queue: []
 
 messages:
+  you_not_in_cult: "<red>Вы не находитесь в культе!"
+  you_in_cult: "<red>Вы уже находитесь в культе!"
+  player_is_offline: "<red>Игрок не в сети!"
+  no_invite: "<red>У вас нет активных приглашений в культ!"
+  invited_to: "<yellow><inviter_name> приглашает вас в <cult_name>!\n<invite_answer_yes> <gold>|</gold> <invite_answer_no>"
+  invited_to_inviter: "<green>Вы пригласили <player_name> в <cult_name>!"
+
+  answer_yes: "<green><click:run_command:/abyss answer yes>Принять</click></green>"
+  answer_no: "<red><click:run_command:/abyss answer no>Отклонить</click></red>"
+
   abyss_cult: "<color:#8a5194>Культ бездны</color:#8a5194>"
   samovar_cult: "<color:#fcd04c>Культ Самовара</color:#fcd04c>"
   no_cult: "Отсутствует"
@@ -22,22 +24,18 @@ messages:
   side_punish_sender: "<dark_gray>Вы выставили отказ <player_name> по вступлению в <cult_name> по приглашению <inviter_name>"
   side_punish_inviter: "<dark_gray><player_name> отказался от приглашения в <cult_name>!"
   side_punish_player: "<dark_gray>Вы отказали <inviter_name> вступить в <cult_name>!"
-
   side_set_sender: "<green>Вы добавили <player_name> в <cult_name> по приглашению <inviter_name>"
-  side_set_inviter: "<green>Вы пригласили <player_name> в <cult_name>!"
-  side_set_player: "<green><inviter_name> пригласил вас в <cult_name>!"
-
+  side_set_inviter: "<green>Вы приняли <player_name> в <cult_name>!"
+  side_set_player: "<green><inviter_name> принял вас в <cult_name>!"
   abyss_plus: "<color:#8a5194>Бог бездны <gray>одаривает вас своим благословением"
   abyss_minus: "<dark_red>Бог бездны проклинает вас"
   abyss_balance: "<color:#8a5194>Бог бездны <gray>компенсирует ваши недостатки"
-
   samovar_plus: "<color:#fcd04c>Самовар <yellow>одаривает вас своим благословением"
   samovar_minus: "<color:#fcd04c>Самовар <yellow>недоволен вами"
   samovar_balance: "<color:#fcd04c>Самовар <yellow>уравнивает чаши весов"
-
-  player_not_in_cult: "<red>Выбранный игрок не состоит в культе!"
+  player_not_in_cult: "<red>Игрок не состоит в культе!"
   player_already_in_cult: "<red>Игрок уже состоит в культе!"
-
   not_in_cult: "<red>Вы не состоите в культе!"
   cult_player_info: "<gold><target_name>Состоит в \"<cult_name>\""
   cult_list: "<gold><cult_name>: <yellow><cult_list>"
+  cult_info: "<yellow>Вы состоите в \'<cult_name>\'"

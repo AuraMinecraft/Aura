@@ -5,26 +5,29 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import net.aniby.aura.core.CoreConfig;
 import net.aniby.aura.gamemaster.common.command.EventCommand;
-import net.aniby.aura.gamemaster.common.command.HighlightCommand;
 import net.aniby.aura.gamemaster.common.command.VisibilityCommand;
 import net.aniby.aura.gamemaster.event.abyss.AbyssCommand;
+import net.aniby.aura.gamemaster.event.abyss.AbyssListener;
 import net.aniby.aura.gamemaster.event.abyss.AbyssManager;
+import net.aniby.aura.gamemaster.event.fault.FaultCommand;
+import net.aniby.aura.gamemaster.event.fault.FaultListener;
+import net.aniby.aura.gamemaster.event.fault.FaultRepository;
+import net.aniby.aura.gamemaster.event.fault.InputCommand;
+import net.coreprotect.CoreProtect;
+import net.coreprotect.CoreProtectAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
-import java.io.IOException;
 
 public final class AuraGameMaster extends JavaPlugin {
     @Getter
     private static AuraGameMaster instance;
     @Getter
     private static AbyssManager abyss;
+    @Getter
+    private static FaultRepository faultRepository;
 
     public static String getPlainMessage(String path) {
         return CoreConfig.getPlainMessage(instance.getConfig(), path);
@@ -50,34 +53,49 @@ public final class AuraGameMaster extends JavaPlugin {
 
         PaperCommandManager commandManager = new PaperCommandManager(this);
         commandManager.registerCommand(new EventCommand());
-        if (pluginManager.getPlugin("GlowAPI") != null)
-            commandManager.registerCommand(new HighlightCommand());
         commandManager.registerCommand(new VisibilityCommand());
 
         // =========== Events
         // Abyss
-        File abyssFile = createResourceFile("events/abyss.yml");
-        abyss = new AbyssManager(this, loadCustomConfig(abyssFile), abyssFile);
-
+        CustomConfig abyssConfig = new CustomConfig("events/abyss.yml", this);
+        abyss = new AbyssManager(this, abyssConfig);
+        getServer().getPluginManager().registerEvents(new AbyssListener(), this);
         commandManager.registerCommand(new AbyssCommand());
+
+        // Faults
+        CustomConfig faultsConfig = new CustomConfig("events/faults.yml", this);
+        faultRepository = new FaultRepository(this, faultsConfig);
+        faultRepository.loadAll();
+        getServer().getPluginManager().registerEvents(new FaultListener(), this);
+        commandManager.registerCommand(new FaultCommand());
+        commandManager.registerCommand(new InputCommand());
     }
 
-    private File createResourceFile(String path) {
-        File file = new File(this.getDataFolder(), path);
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            this.saveResource(path, false);
+
+    public CoreProtectAPI getCoreProtect() {
+        Plugin plugin = getServer().getPluginManager().getPlugin("CoreProtect");
+
+        // Check that CoreProtect is loaded
+        if (!(plugin instanceof CoreProtect)) {
+            return null;
         }
-        return file;
+
+        // Check that the API is enabled
+        CoreProtectAPI CoreProtect = ((CoreProtect) plugin).getAPI();
+        if (!CoreProtect.isEnabled()) {
+            return null;
+        }
+
+        // Check that a compatible version of the API is loaded
+        if (CoreProtect.APIVersion() < 9) {
+            return null;
+        }
+
+        return CoreProtect;
     }
 
-    private FileConfiguration loadCustomConfig(File file) {
-        FileConfiguration config = new YamlConfiguration();
-        try {
-            config.load(file);
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
-        return config;
+    @Override
+    public void onDisable() {
+        faultRepository.getTimer().cancel();
     }
 }

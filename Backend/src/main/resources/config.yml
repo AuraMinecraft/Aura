@@ -36,7 +36,7 @@ mysql:
   database: ""
   user: ""
   password: ""
-  parameters: ""
+  parameters: "?autoReconnect=true&initialTimeout=1&useSSL=false"
 
 discord:
   bot_token: ""
@@ -257,6 +257,9 @@ messages:
   player_name_not_found: "Не найден никнейм Minecraft!"
   profile_whitelist_added: "Игрок <player_name> добавлен в White-List!"
   profile_whitelist_removed: "Игрок <player_name> удален с White-List!"
+
+  streamer_added: "Вы добавили стримера <twitch_name> / <player_name>!"
+  streamer_removed: "Вы сняли стримера <twitch_name> / <player_name>!"
 
   rcon_connection_error: "Ошибка при подключении к серверу! Обратитесь к администрации"
   shop_bought: "Покупка прошла успешно!"

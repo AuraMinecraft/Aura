@@ -1,0 +1,10 @@
+name: AuraMisc
+version: '${project.version}'
+main: net.aniby.aura.misc.AuraMisc
+api-version: '1.20'
+authors: [ An1by ]
+website: https://aura.aniby.net
+load: POSTWORLD
+
+depend:
+  - NBTAPI

@@ -1,46 +1,52 @@
 package net.aniby.aura.gamemaster.event.abyss;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.experimental.FieldDefaults;
 import net.aniby.aura.core.CoreConfig;
 import net.aniby.aura.gamemaster.AuraGameMaster;
+import net.aniby.aura.gamemaster.CustomConfig;
 import net.aniby.aura.tool.DoubleFrequencyMap;
-import net.aniby.aura.tool.FrequencyMap;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 @Getter
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class AbyssManager {
-    private final AuraGameMaster plugin;
-    private final FileConfiguration config;
-    private final File configFile;
+    HashMap<Player, Player> invites = new HashMap<>();
+    AuraGameMaster plugin;
+    CustomConfig config;
 
     HashMap<String, Double> attributeMap(Attribute attribute) {
         HashMap<String, Double> map = new HashMap<>();
-        ConfigurationSection section = config.getConfigurationSection("attributes" + attribute.name());
-        for (String key : section.getKeys(false)) {
-            map.put(key, section.getDouble(key));
+        ConfigurationSection attributes = config.getConfiguration().getConfigurationSection("attributes");
+        assert attributes != null;
+        ConfigurationSection section = attributes.getConfigurationSection(attribute.name());
+        if (section != null) {
+            for (String key : section.getKeys(false)) {
+                map.put(key, section.getDouble(key));
+            }
         }
         return map;
     }
 
     double getAttribute(Attribute attribute, String playerName) {
-        ConfigurationSection section = config.getConfigurationSection("attributes")
+        ConfigurationSection section = config.getConfiguration().getConfigurationSection("attributes")
                 .getConfigurationSection(attribute.name());
-        if (section.getKeys(false).contains(playerName)) {
-            return section.getDouble(playerName);
+        if (section != null) {
+            if (section.getKeys(false).contains(playerName))
+                return section.getDouble(playerName);
         }
         return 0;
     }
@@ -53,28 +59,36 @@ public class AbyssManager {
             assert attributeInstance != null;
             attributeInstance.setBaseValue(attributeInstance.getDefaultValue() + value);
         } else {
-            List<String> balanceQueue = config.getStringList("balance_queue");
+            List<String> balanceQueue = config.getConfiguration().getStringList("balance_queue");
             if (!balanceQueue.contains(playerName)) {
                 balanceQueue.add(playerName);
-                config.set("balance_queue", balanceQueue);
+                config.getConfiguration().set("balance_queue", balanceQueue);
             }
         }
 
-        config.getConfigurationSection("attributes")
-                .getConfigurationSection(attribute.name())
-                .set(playerName, value);
-        config.save(configFile);
+        String attributeName = attribute.name();
+
+        ConfigurationSection attributes = config.getConfiguration().getConfigurationSection("attributes");
+        assert attributes != null;
+        if (!attributes.contains(attributeName))
+            attributes.createSection(attributeName);
+
+        ConfigurationSection section = attributes.getConfigurationSection(attributeName);
+        assert section != null;
+        section.set(playerName, value);
+
+        config.save();
     }
 
     @SneakyThrows
     void updateAttributes(@NotNull Player player) {
         String playerName = player.getName();
 
-        List<String> balanceQueue = config.getStringList("balance_queue");
+        List<String> balanceQueue = config.getConfiguration().getStringList("balance_queue");
         if (balanceQueue.contains(playerName)) {
             balanceQueue.remove(playerName);
-            config.set("balance_queue", balanceQueue);
-            config.save(configFile);
+            config.getConfiguration().set("balance_queue", balanceQueue);
+            config.save();
 
             for (Attribute attribute : Attribute.values()) {
                 HashMap<String, Double> map = attributeMap(attribute);
@@ -85,7 +99,7 @@ public class AbyssManager {
                     attributeInstance.setBaseValue(attributeInstance.getDefaultValue() + value);
                 }
             }
-            player.sendMessage(CoreConfig.getMessage(config, "samovar_balance"));
+            player.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "samovar_balance"));
         }
     }
 
@@ -96,7 +110,7 @@ public class AbyssManager {
         double attackDamage = getAttribute(Attribute.GENERIC_ATTACK_DAMAGE, playerName);
         if (attackDamage == 0) {
             setAttribute(Attribute.GENERIC_ATTACK_DAMAGE, playerName, 0.5);
-            player.sendMessage(CoreConfig.getMessage(config, "samovar_plus"));
+            player.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "samovar_plus"));
         }
 
         // Compensate
@@ -110,10 +124,10 @@ public class AbyssManager {
                 setAttribute(Attribute.GENERIC_MAX_HEALTH, targetName, newTargetHealth);
                 Player target = Bukkit.getPlayer(targetName);
                 if (target != null)
-                    target.sendMessage(CoreConfig.getMessage(config, "samovar_balance"));
+                    target.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "samovar_balance"));
 
                 setAttribute(Attribute.GENERIC_MAX_HEALTH, playerName, 0);
-                player.sendMessage(CoreConfig.getMessage(config, "samovar_balance"));
+                player.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "samovar_balance"));
             }
         }
     }
@@ -125,7 +139,7 @@ public class AbyssManager {
         double attackDamage = getAttribute(Attribute.GENERIC_ATTACK_DAMAGE, playerName);
         if (attackDamage == 0) {
             setAttribute(Attribute.GENERIC_ATTACK_DAMAGE, playerName, -0.4);
-            player.sendMessage(CoreConfig.getMessage(config, "samovar_minus"));
+            player.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "samovar_minus"));
         }
     }
 
@@ -138,12 +152,12 @@ public class AbyssManager {
         if (attackDamage < 0) {
             setAttribute(Attribute.GENERIC_ATTACK_DAMAGE, playerName, 0);
             setAttribute(Attribute.GENERIC_MAX_HEALTH, playerName, health + attackDamage * -5);
-            player.sendMessage(CoreConfig.getMessage(config, "abyss_plus"));
+            player.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "abyss_plus"));
         } else {
             double mappedHealth = attributeMap(Attribute.GENERIC_MAX_HEALTH).values().stream().mapToDouble(Double::doubleValue).sum();
             if (mappedHealth < 0) {
                 setAttribute(Attribute.GENERIC_MAX_HEALTH, playerName, health + mappedHealth * -1);
-                player.sendMessage(CoreConfig.getMessage(config, "abyss_balance"));
+                player.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "abyss_balance"));
             }
         }
     }
@@ -155,7 +169,7 @@ public class AbyssManager {
         double attackDamage = getAttribute(Attribute.GENERIC_MAX_HEALTH, playerName);
         if (attackDamage == 0) {
             setAttribute(Attribute.GENERIC_MAX_HEALTH, playerName, -2);
-            player.sendMessage(CoreConfig.getMessage(config, "abyss_minus"));
+            player.sendMessage(CoreConfig.getMessage(config.getConfiguration(), "abyss_minus"));
         }
     }
 }

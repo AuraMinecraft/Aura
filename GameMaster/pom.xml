@@ -66,12 +66,8 @@
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
         <repository>
-            <id>aikar</id>
-            <url>https://repo.aikar.co/content/groups/aikar/</url>
-        </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>playpro-repo</id>
+            <url>https://maven.playpro.com</url>
         </repository>
     </repositories>
 
@@ -91,16 +87,10 @@
         </dependency>
         <!-- Custom -->
         <dependency>
-            <groupId>org.inventivetalent.packetlistenerapi</groupId>
-            <artifactId>api</artifactId>
-            <version>3.9.11-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.inventivetalent</groupId>
-            <artifactId>glow</artifactId>
-            <version>v1.5.7-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>D:/Programming/Libraries/GlowAPI_v1.5.7-SNAPSHOT.jar</systemPath>
+            <groupId>net.coreprotect</groupId>
+            <artifactId>coreprotect</artifactId>
+            <version>22.2</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

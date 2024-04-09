@@ -79,6 +79,7 @@ public class DonateService {
         String label = notification.getLabel();
         if (label == null)
             return;
+
         if (!label.startsWith("discord:"))
             return;
 
@@ -86,13 +87,12 @@ public class DonateService {
             return;
 
         String discordId = label.split(":", 2)[1];
-        long timestamp = new Date().getTime();
 
-        createDonate(discordId, notification.getWithdrawAmount(), notification.getAmount(), timestamp);
+        createDonate(discordId, notification.getWithdrawAmount(), notification.getAmount(), new Date());
     }
 
 
-    public AuraDonate createDonate(@NotNull String discordId, double amount, double realAmount, long timestamp) {
+    public AuraDonate createDonate(@NotNull String discordId, double amount, double realAmount, Date time) {
         AuraUser user = userService.getByWith("discord_id", discordId);
 
         String promo = user.getPromoDiscordId();
@@ -111,7 +111,7 @@ public class DonateService {
         userService.addAura(user, aura, streamer);
         userRepository.update(user);
 
-        AuraDonate donate = new AuraDonate(0, user, amount, aura, timestamp);
+        AuraDonate donate = new AuraDonate(0, user, amount, aura, time.getTime());
         donateRepository.update(donate);
 
         loggerService.donate(donate, aura, returnsRubles);
